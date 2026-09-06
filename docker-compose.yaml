@@ -1,0 +1,29 @@
+# Copy .env.example to .env and set JWT_SECRET before running:
+#   cp .env.example .env
+#   # then edit .env and set JWT_SECRET to a strong random value
+#   docker compose up
+
+services:
+  api:
+    build: .
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    environment:
+      PORT: "${PORT:-3000}"
+      MONGODB_URI: "mongodb://mongo:27017/vaultra"
+      JWT_SECRET: "${JWT_SECRET}"
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:8.3
+    volumes:
+      - mongo_data:/data/db
+    # Uncomment the line below to expose MongoDB to the host for development:
+    # ports:
+    #   - "27017:27017"
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
