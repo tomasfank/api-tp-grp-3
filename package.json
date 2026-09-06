@@ -8,8 +8,8 @@
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "test": "jest --runInBand",
-    "test:unit": "jest --testPathPattern=unit --runInBand",
-    "test:integration": "jest --testPathPattern=integration --runInBand",
+    "test:unit": "jest --testPathPatterns=unit --runInBand",
+    "test:integration": "jest --testPathPatterns=integration --runInBand",
     "test:coverage": "jest --coverage --runInBand",
     "seed": "ts-node src/seed/seeder.ts"
   },

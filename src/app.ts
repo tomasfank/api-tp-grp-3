@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import { notFoundHandler } from './middlewares/not-found.middleware';
 import { errorHandler } from './middlewares/error.middleware';
 import { UnsupportedMediaError } from './errors';
+import authRouter from './routes/auth.routes';
 
 const app: Application = express();
 
@@ -25,7 +26,7 @@ app.get('/health', (_req, res) => {
 });
 
 // TODO: mount resource routers here as they are implemented
-// app.use('/api/auth', authRouter);
+app.use('/api/auth', authRouter);
 // app.use('/api/services', servicesRouter);
 // app.use('/api/categories', categoriesRouter);
 // app.use('/api/business-info', businessInfoRouter);
