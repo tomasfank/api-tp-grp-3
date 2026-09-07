@@ -1,0 +1,35 @@
+meta {
+  name: 08 Update Contact Status - estado invalido
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/admin/contacts/{{contactId}}/status
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "status": "archivado"
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("rechaza con 400", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+}
+
+docs {
+  Validación (400). Estado fuera del enum permitido (`pending`, `read`, `answered`).
+}

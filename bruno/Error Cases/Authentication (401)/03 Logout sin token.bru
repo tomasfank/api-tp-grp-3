@@ -1,0 +1,25 @@
+meta {
+  name: 03 Logout sin token
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/auth/logout
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
+
+tests {
+  test("rechaza con 401", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}
+
+docs {
+  Autenticación (401). Logout sin header Authorization.
+}

@@ -1,0 +1,42 @@
+meta {
+  name: 03 Create Service
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/services
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Migración a la nube",
+    "category": "{{categoryId}}",
+    "description": "Servicio integral de migración de infraestructura a la nube.",
+    "images": [
+      "https://example.com/img/cloud-1.png"
+    ],
+    "availabilityStatus": "active",
+    "price": 1500
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  const id = body && (body._id || body.id);
+  if (id) {
+    bru.setEnvVar("serviceId", id);
+  }
+}
+
+docs {
+  [admin] Crea un servicio. `category` debe ser un ObjectId válido (usá el
+  `categoryId` capturado). `images` requiere 1-10 URLs. `price` es opcional y
+  positivo. El id creado se guarda en `serviceId`.
+}

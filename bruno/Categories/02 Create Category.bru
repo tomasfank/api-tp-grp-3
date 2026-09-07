@@ -1,0 +1,35 @@
+meta {
+  name: 02 Create Category
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/categories
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Cloud"
+  }
+}
+
+script:post-response {
+  // Guarda el id de la categoría creada para reutilizarlo
+  const body = res.getBody();
+  const id = body && (body._id || body.id);
+  if (id) {
+    bru.setEnvVar("categoryId", id);
+  }
+}
+
+docs {
+  [admin] Crea una categoría. `name` es requerido (1-100 caracteres).
+  El id creado se guarda en la variable `categoryId`.
+}

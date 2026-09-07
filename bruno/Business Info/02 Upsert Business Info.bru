@@ -1,0 +1,34 @@
+meta {
+  name: 02 Upsert Business Info
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/business-info
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Vaultra Consulting",
+    "description": "Consultora IT especializada en cloud, seguridad e infraestructura.",
+    "address": "Av. Corrientes 1234, CABA",
+    "phone": "1145678900",
+    "businessHours": "Lun a Vie de 9 a 18h",
+    "socialMedia": {
+      "linkedin": "https://linkedin.com/company/vaultra",
+      "instagram": "https://instagram.com/vaultra"
+    }
+  }
+}
+
+docs {
+  [admin] Crea o actualiza la información del negocio. Todos los campos son
+  opcionales pero debe enviarse al menos uno. `phone` son 7-15 dígitos.
+}

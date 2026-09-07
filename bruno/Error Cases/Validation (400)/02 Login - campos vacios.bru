@@ -1,0 +1,32 @@
+meta {
+  name: 02 Login - campos vacios
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "",
+    "password": ""
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("rechaza con 400", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+}
+
+docs {
+  Validación (400). Email y contraseña vacíos.
+}

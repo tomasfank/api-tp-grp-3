@@ -1,0 +1,30 @@
+meta {
+  name: 05 List Services - query invalida
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/services?page=0&limit=500
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 0
+  limit: 500
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("rechaza con 400", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+}
+
+docs {
+  Validación (400) de query params. `page` menor a 1 y `limit` mayor a 100.
+}

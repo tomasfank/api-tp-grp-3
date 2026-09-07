@@ -1,0 +1,45 @@
+meta {
+  name: 04 Create Service - datos invalidos
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/services
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "",
+    "category": "no-es-objectid",
+    "description": "",
+    "images": [],
+    "availabilityStatus": "unknown",
+    "price": -10
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("rechaza con 400", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+  test("reporta multiples campos", function () {
+    const body = res.getBody();
+    expect(body.errors).to.be.an("array");
+  });
+}
+
+docs {
+  Validación (400). ObjectId inválido, images vacío, estado inválido, precio
+  negativo y campos vacíos. Debe reportar varios errores de campo.
+}

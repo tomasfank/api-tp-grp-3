@@ -1,0 +1,32 @@
+headers {
+  Accept: application/json
+}
+
+auth {
+  mode: none
+}
+
+docs {
+  # Vaultra Consulting API
+
+  Colección Bruno para probar el backend de Vaultra Consulting de punta a punta.
+
+  ## Cómo usar
+
+  1. Seleccioná un entorno (arriba a la derecha): **Local** o **Production**.
+  2. Ejecutá **Auth > Login** con credenciales de admin válidas. El token JWT
+     se guarda automáticamente en la variable de entorno `token`.
+  3. A partir de ahí, los endpoints protegidos (`[admin]`) usan `Bearer {{token}}`.
+  4. Ejecutá **Auth > Logout** para invalidar el token en el backend.
+
+  ## Variables de entorno
+
+  | Variable   | Descripción                                        |
+  |------------|----------------------------------------------------|
+  | `baseUrl`  | URL base de la API, ej. `http://localhost:3000`    |
+  | `token`    | JWT capturado automáticamente tras el login        |
+  | `adminEmail` / `adminPassword` | Credenciales usadas en Login   |
+  | `categoryId` / `serviceId` / `contactId` | IDs para pruebas     |
+
+  Todos los endpoints usan `{{baseUrl}}` para poder cambiar de entorno sin editar requests.
+}

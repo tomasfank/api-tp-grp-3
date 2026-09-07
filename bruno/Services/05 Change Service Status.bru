@@ -1,0 +1,25 @@
+meta {
+  name: 05 Change Service Status
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/services/{{serviceId}}/status
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "availabilityStatus": "inactive"
+  }
+}
+
+docs {
+  [admin] Cambia el estado del servicio a `active` o `inactive`.
+}

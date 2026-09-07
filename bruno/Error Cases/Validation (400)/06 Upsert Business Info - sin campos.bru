@@ -1,0 +1,33 @@
+meta {
+  name: 06 Upsert Business Info - sin campos
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/business-info
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {}
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("rechaza con 400", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+}
+
+docs {
+  Validación (400). Body vacío: debe enviarse al menos un campo para actualizar.
+}

@@ -1,0 +1,19 @@
+meta {
+  name: 04 Delete Category
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/categories/{{categoryId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  [admin] Elimina la categoría `{{categoryId}}`.
+}

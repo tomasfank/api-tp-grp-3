@@ -1,0 +1,35 @@
+meta {
+  name: 01 List Contacts
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/contacts?page=1&pageSize=20
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+params:query {
+  page: 1
+  pageSize: 20
+}
+
+script:post-response {
+  // Captura el primer contacto para las operaciones siguientes
+  const body = res.getBody();
+  const list = body && (body.data || body.items || body.contacts || body);
+  if (Array.isArray(list) && list.length > 0) {
+    const id = list[0]._id || list[0].id;
+    if (id) bru.setEnvVar("contactId", id);
+  }
+}
+
+docs {
+  [admin] Lista los mensajes de contacto con paginación (`page`, `pageSize` 1-100).
+  Guarda el id del primer contacto en `contactId`.
+}

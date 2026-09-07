@@ -1,0 +1,25 @@
+meta {
+  name: 04 List Contacts sin token
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/admin/contacts
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
+
+tests {
+  test("rechaza con 401", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}
+
+docs {
+  Autenticación (401). Ruta admin sin token.
+}

@@ -1,0 +1,25 @@
+meta {
+  name: 01 Get Service inexistente
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/services/000000000000000000000000
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("rechaza con 404", function () {
+    expect(res.getStatus()).to.equal(404);
+  });
+}
+
+docs {
+  No encontrado (404). ObjectId con formato válido pero sin servicio asociado.
+}

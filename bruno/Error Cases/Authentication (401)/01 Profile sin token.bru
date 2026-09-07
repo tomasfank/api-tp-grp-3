@@ -1,0 +1,32 @@
+meta {
+  name: 01 Profile sin token
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/api/auth/profile
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Sin Token"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+tests {
+  test("rechaza con 401", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}
+
+docs {
+  Autenticación (401). Endpoint protegido sin header Authorization. El backend
+  responde "Token de autenticación requerido".
+}

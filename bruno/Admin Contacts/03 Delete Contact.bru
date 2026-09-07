@@ -1,0 +1,19 @@
+meta {
+  name: 03 Delete Contact
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/contacts/{{contactId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  [admin] Elimina el contacto `{{contactId}}`.
+}

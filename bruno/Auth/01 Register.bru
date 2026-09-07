@@ -1,0 +1,27 @@
+meta {
+  name: 01 Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Admin",
+    "lastName": "Vaultra",
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}",
+    "phone": "1122334455"
+  }
+}
+
+docs {
+  Crea una cuenta de administrador. La contraseña debe tener al menos 8
+  caracteres, una mayúscula y un dígito o símbolo. `phone` es opcional
+  (7-15 dígitos). Responde 201 con el usuario (sin la contraseña).
+}

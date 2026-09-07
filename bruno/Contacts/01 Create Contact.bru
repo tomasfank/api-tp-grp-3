@@ -1,0 +1,25 @@
+meta {
+  name: 01 Create Contact
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/contacts
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Juan Pérez",
+    "email": "juan.perez@example.com",
+    "phone": "1122334455",
+    "subject": "Consulta sobre servicios cloud",
+    "message": "Hola, me gustaría recibir más información sobre migración a la nube."
+  }
+}
+
+docs {
+  Público. Crea un mensaje de contacto. `phone` es opcional (7-15 dígitos).
+}

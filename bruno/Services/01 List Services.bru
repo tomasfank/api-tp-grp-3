@@ -1,0 +1,24 @@
+meta {
+  name: 01 List Services
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/services?page=1&limit=10
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 10
+  ~category: {{categoryId}}
+  ~search: cloud
+}
+
+docs {
+  Público. Lista servicios con paginación (`page`, `limit` 1-100). Filtros
+  opcionales: `category` (ObjectId) y `search` (texto). Los parámetros con `~`
+  están deshabilitados por defecto; activalos según necesites.
+}

@@ -1,0 +1,36 @@
+meta {
+  name: 03 Create Category - nombre vacio
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/categories
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "   "
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("rechaza con 400", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+}
+
+docs {
+  Validación (400). Nombre solo con espacios en blanco (requiere estar autenticado
+  como admin, si no responde 401/403 antes de validar).
+}

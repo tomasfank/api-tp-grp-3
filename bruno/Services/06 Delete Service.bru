@@ -1,0 +1,19 @@
+meta {
+  name: 06 Delete Service
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/services/{{serviceId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  [admin] Elimina el servicio `{{serviceId}}`.
+}

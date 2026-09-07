@@ -1,0 +1,26 @@
+meta {
+  name: 04 Update Service
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/services/{{serviceId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "description": "Descripción actualizada del servicio de migración.",
+    "price": 1800
+  }
+}
+
+docs {
+  [admin] Actualiza el servicio `{{serviceId}}`. Debe enviarse al menos un campo.
+}

@@ -1,0 +1,29 @@
+meta {
+  name: 03 Delete Service como no-admin
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/services/{{serviceId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{nonAdminToken}}
+}
+
+assert {
+  res.status: eq 403
+}
+
+tests {
+  test("rechaza con 403", function () {
+    expect(res.getStatus()).to.equal(403);
+  });
+}
+
+docs {
+  Autorización (403). Eliminar servicio requiere admin. Requiere `nonAdminToken`.
+}
