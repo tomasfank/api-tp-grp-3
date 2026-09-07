@@ -29,7 +29,15 @@ export function validateQuery(schema: ZodType) {
       next(new ValidationError('Parámetros de consulta inválidos', errors));
       return;
     }
-    req.query = result.data as Record<string, string>;
+    // `req.query` is a getter-only property in Express 5, so it cannot be
+    // reassigned directly. Redefine the property to expose the parsed/coerced
+    // values (e.g. numeric pagination params instead of raw strings).
+    Object.defineProperty(req, 'query', {
+      value: result.data,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
     next();
   };
 }

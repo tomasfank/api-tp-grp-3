@@ -3,6 +3,11 @@ import { notFoundHandler } from './middlewares/not-found.middleware';
 import { errorHandler } from './middlewares/error.middleware';
 import { UnsupportedMediaError } from './errors';
 import authRouter from './routes/auth.routes';
+import categoryRouter from './routes/category.routes';
+import serviceRouter from './routes/service.routes';
+import businessInfoRouter from './routes/business-info.routes';
+import contactRouter from './routes/contact.routes';
+import adminContactRouter from './routes/admin-contact.routes';
 
 const app: Application = express();
 
@@ -27,11 +32,11 @@ app.get('/health', (_req, res) => {
 
 // TODO: mount resource routers here as they are implemented
 app.use('/api/auth', authRouter);
-// app.use('/api/services', servicesRouter);
-// app.use('/api/categories', categoriesRouter);
-// app.use('/api/business-info', businessInfoRouter);
-// app.use('/api/contacts', contactsRouter);
-// app.use('/api/admin/contacts', adminContactsRouter);
+app.use('/api/services', serviceRouter);
+app.use('/api/categories', categoryRouter);
+app.use('/api/business-info', businessInfoRouter);
+app.use('/api/contacts', contactRouter);
+app.use('/api/admin/contacts', adminContactRouter);
 
 // 404 for unregistered routes
 app.use(notFoundHandler);
