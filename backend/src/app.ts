@@ -1,0 +1,55 @@
+import express, { Application } from 'express';
+import cors from 'cors';
+import { notFoundHandler } from './middlewares/not-found.middleware';
+import { errorHandler } from './middlewares/error.middleware';
+import { UnsupportedMediaError } from './errors';
+import authRouter from './routes/auth.routes';
+import categoryRouter from './routes/category.routes';
+import serviceRouter from './routes/service.routes';
+import businessInfoRouter from './routes/business-info.routes';
+import contactRouter from './routes/contact.routes';
+import adminContactRouter from './routes/admin-contact.routes';
+
+const app: Application = express();
+
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    credentials: true,
+  })
+);
+
+// Reject non-JSON content types on mutating routes
+app.use((req, _res, next) => {
+  const method = req.method;
+  if (['POST', 'PUT', 'PATCH'].includes(method)) {
+    const contentType = req.headers['content-type'] ?? '';
+    if (contentType && !contentType.includes('application/json')) {
+      return next(new UnsupportedMediaError());
+    }
+  }
+  next();
+});
+
+app.use(express.json());
+
+// Health check
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// TODO: mount resource routers here as they are implemented
+app.use('/api/auth', authRouter);
+app.use('/api/services', serviceRouter);
+app.use('/api/categories', categoryRouter);
+app.use('/api/business-info', businessInfoRouter);
+app.use('/api/contacts', contactRouter);
+app.use('/api/admin/contacts', adminContactRouter);
+
+// 404 for unregistered routes
+app.use(notFoundHandler);
+
+// Global error handler (must be last)
+app.use(errorHandler);
+
+export default app;
