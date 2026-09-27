@@ -1,0 +1,250 @@
+"use client"
+
+import type React from "react"
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { Menu, X, ArrowUpRight, ArrowRight } from "lucide-react"
+
+const navItems = [
+  { label: "Servicios", href: "/catalogo" },
+  { label: "Nosotros", id: "why-us" },
+  { label: "Clientes", id: "testimonials" },
+  { label: "FAQ", id: "faq" },
+]
+
+export function Header() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (pathname !== "/") {
+      setIsScrolled(true)
+      return
+    }
+    const onScroll = () => setIsScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [pathname])
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault()
+    if (pathname !== "/") {
+      router.push(`/#${targetId}`)
+      setIsOpen(false)
+      return
+    }
+    const element = document.getElementById(targetId)
+
+    if (element) {
+      const headerOffset = 100
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY
+      const offsetPosition = elementPosition - headerOffset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      })
+      setIsOpen(false)
+    }
+  }
+
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname !== "/") return
+    e.preventDefault()
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    })
+  }
+
+  return (
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "px-4 pt-4" : ""}`}>
+      <div
+        className={`max-w-7xl mx-auto transition-all duration-300 rounded-2xl ${
+          isScrolled
+            ? "bg-white/70 backdrop-blur-xl border border-zinc-200 px-6 py-3"
+            : "bg-background/90 backdrop-blur-md px-6 py-5"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <Link href="/" onClick={handleLogoClick} className="flex items-center gap-2 cursor-pointer">
+            <svg
+              className={`w-6 h-6 transition-colors duration-300 ${isScrolled ? "text-black" : "text-foreground"}`}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M12 2 2 7l10 5 10-5-10-5Z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+            <span
+              className={`text-lg font-medium tracking-tight transition-colors duration-300 ${isScrolled ? "text-black" : "text-foreground"}`}
+            >
+              Vaultra
+            </span>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-8">
+            {navItems.map((item) =>
+              item.href ? (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`text-sm transition-colors cursor-pointer ${
+                    isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.label}
+                  href={`#${item.id}`}
+                  onClick={(e) => handleSmoothScroll(e, item.id as string)}
+                  className={`text-sm transition-colors cursor-pointer ${
+                    isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                </a>
+              ),
+            )}
+          </nav>
+
+          <div className="hidden md:flex items-center gap-1">
+            <a
+              href="#contacto"
+              onClick={(e) => handleSmoothScroll(e, "contacto")}
+              className={`relative flex items-center gap-0 border rounded-full pl-5 pr-1 py-1 transition-all duration-300 group overflow-hidden cursor-pointer ${
+                isScrolled ? "border-zinc-300" : "border-border"
+              }`}
+            >
+              <span
+                className={`absolute inset-0 rounded-full scale-x-0 origin-right group-hover:scale-x-100 transition-transform duration-300 ${
+                  isScrolled ? "bg-black" : "bg-foreground"
+                }`}
+              />
+              <span
+                className={`text-sm pr-3 relative z-10 transition-colors duration-300 ${
+                  isScrolled ? "text-black group-hover:text-white" : "text-foreground group-hover:text-background"
+                }`}
+              >
+                Hacer una consulta
+              </span>
+              <span className="w-8 h-8 rounded-full flex items-center justify-center relative z-10">
+                <ArrowRight
+                  className={`w-4 h-4 group-hover:opacity-0 absolute transition-opacity duration-300 ${
+                    isScrolled ? "text-black" : "text-foreground"
+                  }`}
+                />
+                <ArrowUpRight
+                  className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+                    isScrolled ? "text-black group-hover:text-white" : "text-foreground group-hover:text-background"
+                  }`}
+                />
+              </span>
+            </a>
+            <Link
+              href="/login"
+              className={`text-sm ml-3 transition-colors cursor-pointer ${
+                isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Ingresar
+            </Link>
+          </div>
+
+          <button
+            className={`md:hidden transition-colors duration-300 ${isScrolled ? "text-black" : "text-foreground"}`}
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {isOpen && (
+          <nav
+            className={`md:hidden mt-6 pb-6 flex flex-col gap-4 border-t pt-6 ${
+              isScrolled ? "border-zinc-200" : "border-border"
+            }`}
+          >
+            {navItems.map((item) =>
+              item.href ? (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`transition-colors cursor-pointer ${
+                    isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.label}
+                  href={`#${item.id}`}
+                  onClick={(e) => handleSmoothScroll(e, item.id as string)}
+                  className={`transition-colors cursor-pointer ${
+                    isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                </a>
+              ),
+            )}
+            <div
+              className={`flex flex-col gap-3 mt-4 pt-4 border-t ${isScrolled ? "border-zinc-200" : "border-border"}`}
+            >
+              <a
+                href="#contacto"
+                onClick={(e) => handleSmoothScroll(e, "contacto")}
+                className={`relative flex items-center gap-0 border rounded-full pl-5 pr-1 py-1 w-fit transition-all duration-300 group overflow-hidden cursor-pointer ${
+                  isScrolled ? "border-zinc-300" : "border-border"
+                }`}
+              >
+                <span
+                  className={`absolute inset-0 rounded-full scale-x-0 origin-right group-hover:scale-x-100 transition-transform duration-300 ${
+                    isScrolled ? "bg-black" : "bg-foreground"
+                  }`}
+                />
+                <span
+                  className={`text-sm pr-3 relative z-10 transition-colors duration-300 ${
+                    isScrolled ? "text-black group-hover:text-white" : "text-foreground group-hover:text-background"
+                  }`}
+                >
+                  Hacer una consulta
+                </span>
+                <span className="w-8 h-8 rounded-full flex items-center justify-center relative z-10">
+                  <ArrowRight
+                    className={`w-4 h-4 group-hover:opacity-0 absolute transition-opacity duration-300 ${
+                      isScrolled ? "text-black" : "text-foreground"
+                    }`}
+                  />
+                  <ArrowUpRight
+                    className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+                      isScrolled ? "text-black group-hover:text-white" : "text-foreground group-hover:text-background"
+                    }`}
+                  />
+                </span>
+              </a>
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className={`text-sm ${isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Ingresar
+              </Link>
+            </div>
+          </nav>
+        )}
+      </div>
+    </header>
+  )
+}
