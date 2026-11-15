@@ -1,7 +1,7 @@
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useRef } from "react"
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion"
 import { ArrowUpRight } from "lucide-react"
-import { AnimatedText } from "./animated-text"
 
 function handleSmoothScroll(e: React.MouseEvent<HTMLAnchorElement>, targetId: string) {
   e.preventDefault()
@@ -16,106 +16,64 @@ function handleSmoothScroll(e: React.MouseEvent<HTMLAnchorElement>, targetId: st
 }
 
 export function HeroSection() {
-  const [isVisible, setIsVisible] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
+  const sectionRef = useRef<HTMLElement>(null)
+  const reduceMotion = useReducedMotion()
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(true)
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [])
+  // el contenido se desvanece suavemente a medida que el hero sale de pantalla
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] })
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
+  const contentY = useTransform(scrollYProgress, [0, 0.6], [0, -40])
 
-  useEffect(() => {
-    let rafId: number
-    let currentProgress = 0
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY
-      const maxScroll = 400
-      const targetProgress = Math.min(scrollY / maxScroll, 1)
-
-      const smoothUpdate = () => {
-        currentProgress += (targetProgress - currentProgress) * 0.1
-
-        if (Math.abs(targetProgress - currentProgress) > 0.001) {
-          setScrollProgress(currentProgress)
-          rafId = requestAnimationFrame(smoothUpdate)
-        } else {
-          setScrollProgress(targetProgress)
+  const fadeUp = (delay: number) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 16 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.6, delay, ease: "easeOut" as const },
         }
-      }
-
-      cancelAnimationFrame(rafId)
-      smoothUpdate()
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => {
-      window.removeEventListener("scroll", handleScroll)
-      cancelAnimationFrame(rafId)
-    }
-  }, [])
-
-  const easeOutQuad = (t: number) => t * (2 - t)
-  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
-
-  const scale = 1 - easeOutQuad(scrollProgress) * 0.15
-  const borderRadius = easeOutCubic(scrollProgress) * 48
-  const heightVh = 100 - easeOutQuad(scrollProgress) * 37.5
 
   return (
-    <section className="pt-32 pb-12 px-6 min-h-screen flex items-center relative overflow-hidden">
-      <div className="absolute inset-0 top-0">
-        <div
-          className="w-full will-change-transform overflow-hidden bg-[radial-gradient(circle_at_20%_20%,oklch(0.2_0_0)_0%,oklch(0.05_0_0)_45%,oklch(0_0_0)_100%)]"
-          style={{
-            transform: `scale(${scale})`,
-            borderRadius: `${borderRadius}px`,
-            height: `${heightVh}vh`,
-          }}
-        >
-          <svg className="w-full h-full opacity-[0.15]" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
-                <path d="M 48 0 L 0 0 0 48" fill="none" stroke="white" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+    <section
+      ref={sectionRef}
+      className="pt-32 pb-12 px-6 min-h-screen flex items-center relative overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,oklch(0.2_0_0)_0%,oklch(0.05_0_0)_45%,oklch(0_0_0)_100%)]">
+        <svg className="w-full h-full opacity-[0.15]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+              <path d="M 48 0 L 0 0 0 48" fill="none" stroke="white" strokeWidth="1" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
       </div>
 
-      <div className="max-w-7xl mx-auto w-full relative z-10">
+      <motion.div
+        className="max-w-7xl mx-auto w-full relative z-10"
+        style={reduceMotion ? undefined : { opacity: contentOpacity, y: contentY }}
+      >
         <div className="text-center mb-12">
-          <div
-            className={`transition-all duration-1000 delay-[800ms] ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}
-          >
+          <motion.div {...fadeUp(0)}>
             <p className="text-sm uppercase tracking-[0.2em] text-white/70 font-medium mb-6">
               Consultoría IT
             </p>
             <h1 className="font-serif text-[3rem] sm:text-[4rem] md:text-[5rem] lg:text-[6rem] xl:text-[6.5rem] font-normal leading-tight mb-6 w-full px-4 max-w-6xl mx-auto text-balance">
-              <AnimatedText
-                text="Tecnología que mueve tu negocio hacia adelante"
-                delay={0.3}
-                className="text-white"
-              />
+              <span className="font-bold text-center text-6xl leading-[0.75] tracking-tighter font-serif lg:text-9xl text-white">
+                Tecnología que mueve tu negocio hacia adelante
+              </span>
             </h1>
-            <p
-              className={`text-white/80 text-lg max-w-2xl mx-auto leading-relaxed transition-all duration-1000 delay-[1400ms] ${
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-              }`}
-            >
-              Diseñamos, construimos y escalamos software, infraestructura cloud y procesos digitales para empresas
-              que necesitan resultados, no solo diapositivas.
-            </p>
-          </div>
+          </motion.div>
+          <motion.p {...fadeUp(0.15)} className="text-white/80 text-lg max-w-2xl mx-auto leading-relaxed">
+            Diseñamos, construimos y escalamos software, infraestructura cloud y procesos digitales para empresas
+            que necesitan resultados, no solo diapositivas.
+          </motion.p>
         </div>
 
-        <div
-          className={`flex flex-col sm:flex-row items-center justify-center gap-4 transition-all duration-1000 delay-[1700ms] ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
+        <motion.div
+          {...fadeUp(0.3)}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <a
             href="#contacto"
@@ -136,8 +94,8 @@ export function HeroSection() {
               Ver servicios
             </span>
           </a>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </section>
   )
 }
