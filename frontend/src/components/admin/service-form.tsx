@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react"
-import { useFieldArray, useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
 import { useNavigate } from "react-router"
 import { toast } from "sonner"
 import { Plus, Trash2 } from "lucide-react"
+import { Field } from "@/components/field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
@@ -15,23 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { api, ApiError } from "@/lib/api"
-import type { Category, Service } from "@/lib/types"
+import type { AvailabilityStatus, Category, Service } from "@/lib/types"
+import { isValid, required, validateUrl, type FormErrors } from "@/lib/validation"
 
-const schema = z.object({
-  name: z.string().trim().min(1, "El nombre es requerido").max(100),
-  category: z.string().min(1, "La categoría es requerida"),
-  description: z.string().trim().min(1, "La descripción es requerida").max(2000),
-  price: z.string().optional(),
-  availabilityStatus: z.enum(["active", "inactive"]),
-  images: z
-    .array(z.object({ url: z.string().url("Debe ser una URL válida") }))
-    .min(1, "Debe proporcionar al menos 1 imagen")
-    .max(10, "No puede proporcionar más de 10 imágenes"),
-})
-
-type FormValues = z.infer<typeof schema>
+const MAX_IMAGES = 10
 
 interface ServiceFormProps {
   service?: Service
@@ -40,6 +27,16 @@ interface ServiceFormProps {
 export function ServiceForm({ service }: ServiceFormProps) {
   const navigate = useNavigate()
   const [categories, setCategories] = useState<Category[]>([])
+  const [values, setValues] = useState({
+    name: service?.name ?? "",
+    category: typeof service?.category === "string" ? service.category : (service?.category?._id ?? ""),
+    description: service?.description ?? "",
+    price: service?.price !== undefined ? String(service.price) : "",
+    availabilityStatus: service?.availabilityStatus ?? ("active" as AvailabilityStatus),
+  })
+  const [images, setImages] = useState<string[]>(service?.images.length ? service.images : [""])
+  const [errors, setErrors] = useState<FormErrors<typeof values & { images: string }>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     api
@@ -48,31 +45,44 @@ export function ServiceForm({ service }: ServiceFormProps) {
       .catch(() => setCategories([]))
   }, [])
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      name: service?.name ?? "",
-      category: typeof service?.category === "string" ? service.category : service?.category?._id ?? "",
-      description: service?.description ?? "",
-      price: service?.price !== undefined ? String(service.price) : "",
-      availabilityStatus: service?.availabilityStatus ?? "active",
-      images: service?.images?.length ? service.images.map((url) => ({ url })) : [{ url: "" }],
-    },
-  })
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setValues({ ...values, [e.target.name]: e.target.value })
+  }
 
-  // maneja la lista dinámica de imágenes (agregar/quitar inputs) dentro del formulario
-  const images = useFieldArray({ control: form.control, name: "images" })
+  // las imágenes son una lista: se actualizan creando un array nuevo (nunca modificando el actual)
+  const updateImage = (index: number, url: string) => {
+    setImages(images.map((current, i) => (i === index ? url : current)))
+  }
+  const addImage = () => setImages([...images, ""])
+  const removeImage = (index: number) => setImages(images.filter((_, i) => i !== index))
 
-  const onSubmit = async (values: FormValues) => {
+  const validateImages = () => {
+    const invalidIndex = images.findIndex((url) => validateUrl(url))
+    if (invalidIndex !== -1) return `La imagen ${invalidIndex + 1} no es una URL válida`
+    return undefined
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    const newErrors = {
+      name: required(values.name, "El nombre es requerido"),
+      category: required(values.category, "La categoría es requerida"),
+      description: required(values.description, "La descripción es requerida"),
+      images: validateImages(),
+    }
+    setErrors(newErrors)
+    if (!isValid(newErrors)) return
+
     const payload = {
-      name: values.name,
+      name: values.name.trim(),
       category: values.category,
-      description: values.description,
-      images: values.images.map((i) => i.url).filter(Boolean),
+      description: values.description.trim(),
+      images,
       availabilityStatus: values.availabilityStatus,
       price: values.price ? Number(values.price) : undefined,
     }
 
+    setIsSubmitting(true)
     try {
       if (service) {
         await api.put(`/api/services/${service._id}`, payload)
@@ -84,148 +94,110 @@ export function ServiceForm({ service }: ServiceFormProps) {
       navigate("/admin/servicios")
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No pudimos guardar la publicación")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 max-w-2xl">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nombre</FormLabel>
-              <FormControl>
-                <Input {...field} className="rounded-xl h-12" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <form onSubmit={handleSubmit} noValidate className="space-y-5 max-w-2xl">
+      <Field label="Nombre" htmlFor="name" error={errors.name}>
+        <Input id="name" name="name" maxLength={100} value={values.name} onChange={handleChange} className="rounded-xl h-12" />
+      </Field>
 
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Categoría</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger className="rounded-xl h-12 w-full">
-                    <SelectValue placeholder="Seleccioná una categoría" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c._id} value={c._id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descripción</FormLabel>
-              <FormControl>
-                <Textarea rows={5} {...field} className="rounded-xl" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Precio (opcional)</FormLabel>
-                <FormControl>
-                  <Input type="number" min="0" step="0.01" {...field} className="rounded-xl h-12" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="availabilityStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Estado</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger className="rounded-xl h-12 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="active">Activo</SelectItem>
-                    <SelectItem value="inactive">Inactivo</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div>
-          <FormLabel>Imágenes (URLs)</FormLabel>
-          <div className="space-y-3 mt-2">
-            {images.fields.map((image, index) => (
-              <FormField
-                key={image.id}
-                control={form.control}
-                name={`images.${index}.url`}
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-2">
-                      <FormControl>
-                        <Input {...field} placeholder="https://..." className="rounded-xl h-12" />
-                      </FormControl>
-                      {images.fields.length > 1 && (
-                        <Button type="button" variant="ghost" size="icon" onClick={() => images.remove(index)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <Field label="Categoría" htmlFor="category" error={errors.category}>
+        <Select value={values.category} onValueChange={(category) => setValues({ ...values, category })}>
+          <SelectTrigger id="category" className="rounded-xl h-12 w-full">
+            <SelectValue placeholder="Seleccioná una categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((c) => (
+              <SelectItem key={c._id} value={c._id}>
+                {c.name}
+              </SelectItem>
             ))}
-          </div>
-          {form.formState.errors.images?.message && (
-            <p className="text-sm text-destructive mt-2">{form.formState.errors.images.message}</p>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => images.append({ url: "" })}
-            disabled={images.fields.length >= 10}
-            className="mt-3 rounded-full"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Agregar imagen
-          </Button>
-        </div>
+          </SelectContent>
+        </Select>
+      </Field>
 
-        <Button type="submit" disabled={form.formState.isSubmitting} className="rounded-full h-12 px-8">
-          {form.formState.isSubmitting ? "Guardando..." : service ? "Guardar cambios" : "Crear publicación"}
+      <Field label="Descripción" htmlFor="description" error={errors.description}>
+        <Textarea
+          id="description"
+          name="description"
+          rows={5}
+          maxLength={2000}
+          value={values.description}
+          onChange={handleChange}
+          className="rounded-xl"
+        />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Precio (opcional)" htmlFor="price">
+          <Input
+            id="price"
+            name="price"
+            type="number"
+            min="0"
+            step="0.01"
+            value={values.price}
+            onChange={handleChange}
+            className="rounded-xl h-12"
+          />
+        </Field>
+        <Field label="Estado" htmlFor="availabilityStatus">
+          <Select
+            value={values.availabilityStatus}
+            onValueChange={(status) => setValues({ ...values, availabilityStatus: status as AvailabilityStatus })}
+          >
+            <SelectTrigger id="availabilityStatus" className="rounded-xl h-12 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Activo</SelectItem>
+              <SelectItem value="inactive">Inactivo</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+
+      <div>
+        <Label className={errors.images ? "text-destructive" : undefined}>Imágenes (URLs)</Label>
+        <div className="space-y-3 mt-2">
+          {images.map((url, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <Input
+                value={url}
+                onChange={(e) => updateImage(index, e.target.value)}
+                placeholder="https://..."
+                aria-label={`Imagen ${index + 1}`}
+                className="rounded-xl h-12"
+              />
+              {images.length > 1 && (
+                <Button type="button" variant="ghost" size="icon" onClick={() => removeImage(index)}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        {errors.images && <p className="text-sm text-destructive mt-2">{errors.images}</p>}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addImage}
+          disabled={images.length >= MAX_IMAGES}
+          className="mt-3 rounded-full"
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          Agregar imagen
         </Button>
-      </form>
-    </Form>
+      </div>
+
+      <Button type="submit" disabled={isSubmitting} className="rounded-full h-12 px-8">
+        {isSubmitting ? "Guardando..." : service ? "Guardar cambios" : "Crear publicación"}
+      </Button>
+    </form>
   )
 }

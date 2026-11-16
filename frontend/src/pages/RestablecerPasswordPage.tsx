@@ -1,41 +1,44 @@
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useState, type ChangeEvent, type FormEvent } from "react"
 import { Link, useNavigate } from "react-router"
 import { toast } from "sonner"
 import { Header } from "@/components/header"
+import { Field } from "@/components/field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { api, ApiError } from "@/lib/api"
+import { isValid, required, validatePassword, type FormErrors } from "@/lib/validation"
 
-const schema = z.object({
-  resetToken: z.string().min(1, "El token de restablecimiento es requerido"),
-  newPassword: z
-    .string()
-    .min(8, "Debe tener al menos 8 caracteres")
-    .regex(/[A-Z]/, "Debe contener al menos una letra mayúscula")
-    .regex(/[0-9!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?`~]/, "Debe contener al menos un dígito o símbolo"),
-})
-
-type FormValues = z.infer<typeof schema>
+const initialValues = { resetToken: "", newPassword: "" }
 
 export default function RestablecerPasswordPage() {
   const navigate = useNavigate()
+  const [values, setValues] = useState(initialValues)
+  const [errors, setErrors] = useState<FormErrors<typeof initialValues>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { resetToken: "", newPassword: "" },
-  })
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setValues({ ...values, [e.target.name]: e.target.value })
+  }
 
-  const onSubmit = async (values: FormValues) => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    const newErrors = {
+      resetToken: required(values.resetToken, "El token de restablecimiento es requerido"),
+      newPassword: validatePassword(values.newPassword),
+    }
+    setErrors(newErrors)
+    if (!isValid(newErrors)) return
+
+    setIsSubmitting(true)
     try {
       await api.post("/api/auth/reset-password", values, { auth: false })
       toast.success("Contraseña actualizada. Ahora podés iniciar sesión.")
       navigate("/login")
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No pudimos restablecer la contraseña")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -49,39 +52,24 @@ export default function RestablecerPasswordPage() {
             Pegá el token que generaste y elegí una nueva contraseña.
           </p>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <FormField
-                control={form.control}
-                name="resetToken"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Token</FormLabel>
-                    <FormControl>
-                      <Textarea rows={3} {...field} className="rounded-xl" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
+          <form onSubmit={handleSubmit} noValidate className="space-y-5">
+            <Field label="Token" htmlFor="resetToken" error={errors.resetToken}>
+              <Textarea id="resetToken" name="resetToken" rows={3} value={values.resetToken} onChange={handleChange} className="rounded-xl" />
+            </Field>
+            <Field label="Nueva contraseña" htmlFor="newPassword" error={errors.newPassword}>
+              <Input
+                id="newPassword"
                 name="newPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nueva contraseña</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} className="rounded-xl h-12" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                type="password"
+                value={values.newPassword}
+                onChange={handleChange}
+                className="rounded-xl h-12"
               />
-              <Button type="submit" disabled={form.formState.isSubmitting} className="w-full rounded-full h-12">
-                {form.formState.isSubmitting ? "Guardando..." : "Restablecer contraseña"}
-              </Button>
-            </form>
-          </Form>
+            </Field>
+            <Button type="submit" disabled={isSubmitting} className="w-full rounded-full h-12">
+              {isSubmitting ? "Guardando..." : "Restablecer contraseña"}
+            </Button>
+          </form>
 
           <div className="mt-6 text-sm text-muted-foreground">
             <Link to="/login" className="hover:text-foreground">

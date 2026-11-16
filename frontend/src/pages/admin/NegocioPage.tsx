@@ -1,52 +1,33 @@
-import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
 import { toast } from "sonner"
+import { Field } from "@/components/field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { api, ApiError } from "@/lib/api"
 import type { BusinessInfo } from "@/lib/types"
+import { isValid, required, validatePhone, type FormErrors } from "@/lib/validation"
 
-const schema = z.object({
-  name: z.string().trim().min(1, "El nombre no puede estar vacío").max(200),
-  description: z.string().trim().max(2000).optional().or(z.literal("")),
-  address: z.string().trim().max(300).optional().or(z.literal("")),
-  phone: z
-    .string()
-    .regex(/^\d{7,15}$/, "El teléfono debe contener entre 7 y 15 dígitos numéricos")
-    .optional()
-    .or(z.literal("")),
-  businessHours: z.string().trim().max(500).optional().or(z.literal("")),
-  instagram: z.string().trim().optional().or(z.literal("")),
-  facebook: z.string().trim().optional().or(z.literal("")),
-})
-
-type FormValues = z.infer<typeof schema>
+const initialValues = {
+  name: "",
+  description: "",
+  address: "",
+  phone: "",
+  businessHours: "",
+  instagram: "",
+  facebook: "",
+}
 
 export default function NegocioPage() {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      description: "",
-      address: "",
-      phone: "",
-      businessHours: "",
-      instagram: "",
-      facebook: "",
-    },
-  })
-
-  const { reset } = form
+  const [values, setValues] = useState(initialValues)
+  const [errors, setErrors] = useState<FormErrors<typeof initialValues>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     api
       .get<BusinessInfo>("/api/business-info")
-      .then((info) => {
-        reset({
+      .then((info) =>
+        setValues({
           name: info.name ?? "",
           description: info.description ?? "",
           address: info.address ?? "",
@@ -54,28 +35,43 @@ export default function NegocioPage() {
           businessHours: info.businessHours ?? "",
           instagram: info.socialMedia?.instagram ?? "",
           facebook: info.socialMedia?.facebook ?? "",
-        })
-      })
+        }),
+      )
       .catch(() => null)
-  }, [reset])
+  }, [])
 
-  const onSubmit = async (values: FormValues) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setValues({ ...values, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    const newErrors = {
+      name: required(values.name, "El nombre no puede estar vacío"),
+      phone: validatePhone(values.phone),
+    }
+    setErrors(newErrors)
+    if (!isValid(newErrors)) return
+
     const socialMedia: Record<string, string> = {}
-    if (values.instagram) socialMedia.instagram = values.instagram
-    if (values.facebook) socialMedia.facebook = values.facebook
+    if (values.instagram.trim()) socialMedia.instagram = values.instagram.trim()
+    if (values.facebook.trim()) socialMedia.facebook = values.facebook.trim()
 
+    setIsSubmitting(true)
     try {
       await api.put("/api/business-info", {
-        name: values.name,
-        description: values.description || undefined,
-        address: values.address || undefined,
+        name: values.name.trim(),
+        description: values.description.trim() || undefined,
+        address: values.address.trim() || undefined,
         phone: values.phone || undefined,
-        businessHours: values.businessHours || undefined,
+        businessHours: values.businessHours.trim() || undefined,
         socialMedia: Object.keys(socialMedia).length > 0 ? socialMedia : undefined,
       })
       toast.success("Información institucional actualizada")
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No pudimos guardar los cambios")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -83,106 +79,49 @@ export default function NegocioPage() {
     <div>
       <h1 className="font-serif text-3xl tracking-tight mb-8">Información del negocio</h1>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre del comercio</FormLabel>
-                <FormControl>
-                  <Input {...field} className="rounded-xl h-12" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
+      <form onSubmit={handleSubmit} noValidate className="space-y-5 max-w-xl">
+        <Field label="Nombre del comercio" htmlFor="name" error={errors.name}>
+          <Input id="name" name="name" maxLength={200} value={values.name} onChange={handleChange} className="rounded-xl h-12" />
+        </Field>
+        <Field label="Descripción" htmlFor="description">
+          <Textarea
+            id="description"
             name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Descripción</FormLabel>
-                <FormControl>
-                  <Textarea rows={4} {...field} className="rounded-xl" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            rows={4}
+            maxLength={2000}
+            value={values.description}
+            onChange={handleChange}
+            className="rounded-xl"
           />
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dirección</FormLabel>
-                <FormControl>
-                  <Input {...field} className="rounded-xl h-12" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Teléfono</FormLabel>
-                <FormControl>
-                  <Input {...field} className="rounded-xl h-12" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
+        </Field>
+        <Field label="Dirección" htmlFor="address">
+          <Input id="address" name="address" maxLength={300} value={values.address} onChange={handleChange} className="rounded-xl h-12" />
+        </Field>
+        <Field label="Teléfono" htmlFor="phone" error={errors.phone}>
+          <Input id="phone" name="phone" value={values.phone} onChange={handleChange} className="rounded-xl h-12" />
+        </Field>
+        <Field label="Horarios de atención" htmlFor="businessHours">
+          <Input
+            id="businessHours"
             name="businessHours"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Horarios de atención</FormLabel>
-                <FormControl>
-                  <Input {...field} className="rounded-xl h-12" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            maxLength={500}
+            value={values.businessHours}
+            onChange={handleChange}
+            className="rounded-xl h-12"
           />
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="instagram"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Instagram</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="rounded-xl h-12" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="facebook"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Facebook</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="rounded-xl h-12" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <Button type="submit" disabled={form.formState.isSubmitting} className="rounded-full h-12 px-8">
-            {form.formState.isSubmitting ? "Guardando..." : "Guardar cambios"}
-          </Button>
-        </form>
-      </Form>
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Instagram" htmlFor="instagram">
+            <Input id="instagram" name="instagram" value={values.instagram} onChange={handleChange} className="rounded-xl h-12" />
+          </Field>
+          <Field label="Facebook" htmlFor="facebook">
+            <Input id="facebook" name="facebook" value={values.facebook} onChange={handleChange} className="rounded-xl h-12" />
+          </Field>
+        </div>
+        <Button type="submit" disabled={isSubmitting} className="rounded-full h-12 px-8">
+          {isSubmitting ? "Guardando..." : "Guardar cambios"}
+        </Button>
+      </form>
     </div>
   )
 }
