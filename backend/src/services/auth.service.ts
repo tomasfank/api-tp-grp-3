@@ -154,6 +154,19 @@ export const AuthService = {
   },
 
   /**
+   * Return the authenticated admin's profile without the password field.
+   */
+  async getProfile(adminId: string) {
+    const user = await User.findById(adminId);
+
+    if (!user) {
+      throw new AuthenticationError('Usuario no encontrado');
+    }
+
+    return omitPassword(user);
+  },
+
+  /**
    * Partially update the authenticated admin's profile.
    * Throws ValidationError if no valid fields are provided.
    * Returns updated user without the password field.

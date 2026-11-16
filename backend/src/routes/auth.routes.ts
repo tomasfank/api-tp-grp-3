@@ -23,6 +23,7 @@ router.post('/reset-password', validateBody(ResetPasswordSchema), AuthController
 
 // Authenticated routes
 router.post('/logout', authMiddleware, AuthController.logout);
+router.get('/profile', authMiddleware, roleMiddleware('admin'), AuthController.getProfile);
 router.put(
   '/profile',
   authMiddleware,

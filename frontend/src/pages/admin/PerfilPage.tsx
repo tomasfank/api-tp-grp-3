@@ -1,22 +1,24 @@
-import { useState, type ChangeEvent, type FormEvent } from "react"
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
 import { toast } from "sonner"
 import { Field } from "@/components/field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { api, ApiError } from "@/lib/api"
-import { useAuth } from "@/hooks/use-auth"
 import type { User } from "@/lib/types"
 import { isValid, required, validatePhone, type FormErrors } from "@/lib/validation"
 
 export default function PerfilPage() {
-  const { user, setUser } = useAuth()
-  const [values, setValues] = useState({
-    name: user?.name ?? "",
-    lastName: user?.lastName ?? "",
-    phone: user?.phone ?? "",
-  })
+  const [values, setValues] = useState({ name: "", lastName: "", phone: "" })
   const [errors, setErrors] = useState<FormErrors<typeof values>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // los datos del perfil se piden al backend cada vez que se abre la página
+  useEffect(() => {
+    api
+      .get<User>("/api/auth/profile")
+      .then((user) => setValues({ name: user.name, lastName: user.lastName, phone: user.phone ?? "" }))
+      .catch(() => toast.error("No pudimos cargar tu perfil"))
+  }, [])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValues({ ...values, [e.target.name]: e.target.value })
@@ -35,12 +37,11 @@ export default function PerfilPage() {
 
     setIsSubmitting(true)
     try {
-      const updated = await api.put<User>("/api/auth/profile", {
+      await api.put("/api/auth/profile", {
         name: values.name.trim(),
         lastName: values.lastName.trim(),
         phone: values.phone || undefined,
       })
-      setUser(updated)
       toast.success("Perfil actualizado")
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No pudimos actualizar tu perfil")
