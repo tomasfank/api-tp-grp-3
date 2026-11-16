@@ -14,29 +14,36 @@ const initialValues = {
   address: "",
   phone: "",
   businessHours: "",
-  instagram: "",
-  facebook: "",
 }
+
+// redes que se pueden editar desde el formulario
+const SOCIAL_NETWORKS = [
+  { key: "instagram", label: "Instagram" },
+  { key: "facebook", label: "Facebook" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "twitter", label: "Twitter" },
+]
 
 export default function NegocioPage() {
   const [values, setValues] = useState(initialValues)
+  // se guarda el objeto completo que vino del backend: así, al enviarlo, no se pierde ninguna red
+  const [socialMedia, setSocialMedia] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<FormErrors<typeof initialValues>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     api
       .get<BusinessInfo>("/api/business-info")
-      .then((info) =>
+      .then((info) => {
         setValues({
           name: info.name ?? "",
           description: info.description ?? "",
           address: info.address ?? "",
           phone: info.phone ?? "",
           businessHours: info.businessHours ?? "",
-          instagram: info.socialMedia?.instagram ?? "",
-          facebook: info.socialMedia?.facebook ?? "",
-        }),
-      )
+        })
+        setSocialMedia(info.socialMedia ?? {})
+      })
       .catch(() => null)
   }, [])
 
@@ -54,9 +61,12 @@ export default function NegocioPage() {
     setErrors(newErrors)
     if (!isValid(newErrors)) return
 
-    const socialMedia: Record<string, string> = {}
-    if (values.instagram.trim()) socialMedia.instagram = values.instagram.trim()
-    if (values.facebook.trim()) socialMedia.facebook = values.facebook.trim()
+    // se descartan las redes que quedaron vacías
+    const filledSocialMedia = Object.fromEntries(
+      Object.entries(socialMedia)
+        .map(([network, url]) => [network, url.trim()])
+        .filter(([, url]) => url !== ""),
+    )
 
     setIsSubmitting(true)
     try {
@@ -66,7 +76,7 @@ export default function NegocioPage() {
         address: values.address.trim() || undefined,
         phone: values.phone || undefined,
         businessHours: values.businessHours.trim() || undefined,
-        socialMedia: Object.keys(socialMedia).length > 0 ? socialMedia : undefined,
+        socialMedia: filledSocialMedia,
       })
       toast.success("Información institucional actualizada")
     } catch (err) {
@@ -112,12 +122,16 @@ export default function NegocioPage() {
           />
         </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Instagram" htmlFor="instagram">
-            <Input id="instagram" name="instagram" value={values.instagram} onChange={handleChange} className="rounded-xl h-12" />
-          </Field>
-          <Field label="Facebook" htmlFor="facebook">
-            <Input id="facebook" name="facebook" value={values.facebook} onChange={handleChange} className="rounded-xl h-12" />
-          </Field>
+          {SOCIAL_NETWORKS.map((network) => (
+            <Field key={network.key} label={network.label} htmlFor={network.key}>
+              <Input
+                id={network.key}
+                value={socialMedia[network.key] ?? ""}
+                onChange={(e) => setSocialMedia({ ...socialMedia, [network.key]: e.target.value })}
+                className="rounded-xl h-12"
+              />
+            </Field>
+          ))}
         </div>
         <Button type="submit" disabled={isSubmitting} className="rounded-full h-12 px-8">
           {isSubmitting ? "Guardando..." : "Guardar cambios"}
