@@ -131,7 +131,11 @@ export const ServiceRepository = {
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
-      Service.find(query).sort({ name: 1 }).skip(skip).limit(limit),
+      Service.find(query)
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('category', 'name'),
       Service.countDocuments(query),
     ]);
 
@@ -148,7 +152,7 @@ export const ServiceRepository = {
     const service = await Service.findOne({
       _id: id,
       availabilityStatus: 'active',
-    });
+    }).populate('category', 'name');
     if (!service) {
       throw new NotFoundError('Servicio no encontrado');
     }
@@ -180,7 +184,11 @@ export const ServiceRepository = {
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
-      Service.find(query).sort({ name: 1 }).skip(skip).limit(limit),
+      Service.find(query)
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('category', 'name'),
       Service.countDocuments(query),
     ]);
 
@@ -194,7 +202,7 @@ export const ServiceRepository = {
    * Throws NotFoundError if not found.
    */
   async findByIdAdmin(id: string): Promise<IService> {
-    const service = await Service.findById(id);
+    const service = await Service.findById(id).populate('category', 'name');
     if (!service) {
       throw new NotFoundError('Servicio no encontrado');
     }

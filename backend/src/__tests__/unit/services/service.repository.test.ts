@@ -442,7 +442,7 @@ describe('Property 19 — El filtro por categoría retorna solo servicios de esa
             expect(result.total).toBe(expectedInA);
             expect(result.data).toHaveLength(expectedInA);
             for (const svc of result.data) {
-              expect(String(svc.category)).toBe(catA);
+              expect(String(svc.category._id)).toBe(catA);
             }
           }
         ),
@@ -623,7 +623,7 @@ describe('Property 22 — Las respuestas de listado de servicios incluyen todos 
             expect(svc.name).toBe(name);
             expect(svc.description).toBe(description);
             // category reference present.
-            expect(String(svc.category)).toBe(categoryId);
+            expect(String(svc.category._id)).toBe(categoryId);
             // images preserved.
             expect(svc.images).toEqual([
               'https://example.com/a.png',

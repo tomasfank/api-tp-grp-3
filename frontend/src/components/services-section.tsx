@@ -1,6 +1,5 @@
 import { Code2, Cloud, Sparkles, Server, ShieldCheck, ArrowRight, type LucideIcon } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router"
 import { api } from "@/lib/api"
 import type { Category } from "@/lib/types"
@@ -29,7 +28,8 @@ const DEFAULT_CATEGORY_META = {
   description: "Soluciones tecnológicas a medida para impulsar tu negocio.",
 }
 
-function AnimatedIcon({ Icon, delay = 0 }: { Icon: any; delay?: number }) {
+// dibuja el ícono (ver .animate-draw-icon en index.css) recién cuando entra en pantalla
+function AnimatedIcon({ Icon }: { Icon: LucideIcon }) {
   const [isVisible, setIsVisible] = useState(false)
   const iconRef = useRef<HTMLDivElement>(null)
 
@@ -65,11 +65,9 @@ function AnimatedIcon({ Icon, delay = 0 }: { Icon: any; delay?: number }) {
 }
 
 export function ServicesSection() {
-  const [isVisible, setIsVisible] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const sectionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     api
@@ -77,23 +75,6 @@ export function ServicesSection() {
       .then(setCategories)
       .catch(() => setError("No pudimos cargar las categorías."))
       .finally(() => setIsLoading(false))
-  }, [])
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-        }
-      },
-      { threshold: 0.2 },
-    )
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
-
-    return () => observer.disconnect()
   }, [])
 
   return (
@@ -107,7 +88,6 @@ export function ServicesSection() {
 
       <div className="max-w-7xl mx-auto relative z-10">
         <div
-          ref={sectionRef}
           className="relative px-6 lg:px-8 py-16 lg:py-20 mb-32 overflow-hidden rounded-3xl bg-[oklch(0.1_0_0)]"
         >
           <div className="absolute inset-0 w-full h-full">
@@ -148,55 +128,41 @@ export function ServicesSection() {
           </p>
         </div>
 
-        {error && <p className="text-center text-destructive py-8">{error}</p>}
-
-        {!error && (
-          <motion.div layout className="grid md:grid-cols-4 gap-8">
-            <AnimatePresence mode="popLayout">
-              {(isLoading ? Array.from({ length: 3 }) : categories).map((category, index) => {
-                if (isLoading) {
-                  return (
-                    <div key={index} className="p-8 rounded-3xl text-center animate-pulse">
-                      <div className="mb-6 flex justify-center">
-                        <div className="h-16 w-16 rounded-full bg-zinc-100" />
-                      </div>
-                      <div className="h-6 w-32 mx-auto bg-zinc-100 rounded mb-3" />
-                      <div className="h-4 w-full bg-zinc-100 rounded" />
-                    </div>
-                  )
-                }
-
-                const cat = category as Category
-                const meta = CATEGORY_META[cat.name] ?? DEFAULT_CATEGORY_META
-
-                return (
-                  <motion.div
-                    layout
-                    key={cat._id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.3, delay: index * 0.03 }}
-                  >
-                    <Link
-                      to={`/catalogo?category=${cat._id}`}
-                      className="group p-8 rounded-3xl hover:bg-zinc-50 transition-colors duration-300 text-center flex flex-col items-center"
-                    >
-                      <div className="mb-6 flex justify-center">
-                        <AnimatedIcon Icon={meta.icon} delay={0} />
-                      </div>
-                      <h3 className="text-xl font-medium mb-3 text-foreground">{cat.name}</h3>
-                      <p className="text-muted-foreground leading-relaxed text-sm">{meta.description}</p>
-                    </Link>
-                  </motion.div>
-                )
-              })}
-            </AnimatePresence>
-          </motion.div>
-        )}
-
-        {!isLoading && !error && categories.length === 0 && (
+        {error ? (
+          <p className="text-center text-destructive py-8">{error}</p>
+        ) : isLoading ? (
+          <div className="grid md:grid-cols-4 gap-8">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="p-8 rounded-3xl text-center animate-pulse">
+                <div className="mb-6 flex justify-center">
+                  <div className="h-16 w-16 rounded-full bg-zinc-100" />
+                </div>
+                <div className="h-6 w-32 mx-auto bg-zinc-100 rounded mb-3" />
+                <div className="h-4 w-full bg-zinc-100 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : categories.length === 0 ? (
           <p className="text-center text-muted-foreground py-16">Todavía no hay categorías de servicios cargadas.</p>
+        ) : (
+          <div className="grid md:grid-cols-4 gap-8">
+            {categories.map((category) => {
+              const meta = CATEGORY_META[category.name] ?? DEFAULT_CATEGORY_META
+              return (
+                <Link
+                  key={category._id}
+                  to={`/catalogo?category=${category._id}`}
+                  className="group p-8 rounded-3xl hover:bg-zinc-50 transition-colors duration-300 text-center flex flex-col items-center"
+                >
+                  <div className="mb-6 flex justify-center">
+                    <AnimatedIcon Icon={meta.icon} />
+                  </div>
+                  <h3 className="text-xl font-medium mb-3 text-foreground">{category.name}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-sm">{meta.description}</p>
+                </Link>
+              )
+            })}
+          </div>
         )}
 
         <div className="flex justify-center mt-16">

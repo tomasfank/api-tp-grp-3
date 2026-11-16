@@ -235,7 +235,7 @@ const BUSINESS_INFO_SEED = {
   description:
     'Vaultra Consulting es una consultora de tecnología especializada en soluciones cloud, seguridad de la información, desarrollo de software e infraestructura. Acompañamos a nuestros clientes en su transformación digital con equipos expertos y un enfoque orientado a resultados.',
   address: 'Av. Corrientes 1234, Piso 8, Ciudad Autónoma de Buenos Aires, Argentina',
-  phone: '+541145678900',
+  phone: '541145678900',
   socialMedia: {
     linkedin: 'https://www.linkedin.com/company/vaultra-consulting',
     twitter: 'https://twitter.com/vaultra',

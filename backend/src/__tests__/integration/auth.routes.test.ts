@@ -227,6 +227,32 @@ describe('Recuperación de contraseña (forgot → reset round-trip)', () => {
 
 // ── Update profile (Requirements 3.1, 3.2, 3.3) ───────────────────────────────
 
+describe('GET /api/auth/profile — [auth, admin]', () => {
+  it('devuelve el perfil del admin autenticado sin la contraseña', async () => {
+    await registerDefault();
+    const token = await loginDefault();
+
+    const res = await request(app)
+      .get('/api/auth/profile')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      name: VALID_ADMIN.name,
+      lastName: VALID_ADMIN.lastName,
+      email: VALID_ADMIN.email,
+    });
+    expect(res.body.password).toBeUndefined();
+  });
+
+  it('rechaza el request sin token con 401', async () => {
+    const res = await request(app).get('/api/auth/profile');
+
+    expect(res.status).toBe(401);
+    expect(res.body.status).toBe(401);
+  });
+});
+
 describe('PUT /api/auth/profile — [auth, admin]', () => {
   it('actualiza sólo los campos provistos para un admin autenticado', async () => {
     await registerDefault();

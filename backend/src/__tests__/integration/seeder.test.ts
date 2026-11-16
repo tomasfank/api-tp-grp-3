@@ -5,6 +5,7 @@ import { seedDatabase } from '../../seed/seeder';
 import { Category } from '../../models/category.model';
 import { Service } from '../../models/service.model';
 import { BusinessInfo } from '../../models/business-info.model';
+import { UpsertBusinessInfoSchema } from '../../schemas/business-info.schemas';
 
 // ── MongoDB in-memory setup ────────────────────────────────────────────────────
 //
@@ -102,5 +103,23 @@ describe('seedDatabase — comportamiento idempotente', () => {
     expect(await Category.countDocuments()).toBe(categoriesAfterFirst);
     expect(await Service.countDocuments()).toBe(servicesAfterFirst);
     expect(await BusinessInfo.countDocuments()).toBe(businessInfoAfterFirst);
+  });
+
+  it('la información del negocio insertada cumple las mismas reglas que valida la API', async () => {
+    await seedDatabase();
+
+    const info = await BusinessInfo.findOne();
+    const { name, description, address, phone, socialMedia, businessHours } = info!.toObject();
+
+    // si el seed no respeta el esquema, el formulario de administración no puede guardarlo
+    const result = UpsertBusinessInfoSchema.safeParse({
+      name,
+      description,
+      address,
+      phone,
+      socialMedia,
+      businessHours,
+    });
+    expect(result.success).toBe(true);
   });
 });

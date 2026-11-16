@@ -13,14 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
+import { SimplePagination } from "@/components/simple-pagination"
 import { api } from "@/lib/api"
 import type { Category, PaginatedResult, Service } from "@/lib/types"
 
@@ -37,8 +30,12 @@ export default function CatalogoPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // espera a que el usuario deje de tipear; al cambiar el filtro se vuelve a la página 1
   useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(search), 400)
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 400)
     return () => clearTimeout(timeout)
   }, [search])
 
@@ -48,10 +45,6 @@ export default function CatalogoPage() {
       .then(setCategories)
       .catch(() => setCategories([]))
   }, [])
-
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch, categoryId])
 
   useEffect(() => {
     setIsLoading(true)
@@ -68,8 +61,6 @@ export default function CatalogoPage() {
       .catch(() => setError("No pudimos cargar las publicaciones. Intentá nuevamente."))
       .finally(() => setIsLoading(false))
   }, [page, debouncedSearch, categoryId])
-
-  const categoryName = (cat: Service["category"]) => (typeof cat === "string" ? "" : cat.name)
 
   return (
     <main className="min-h-screen bg-background">
@@ -93,7 +84,13 @@ export default function CatalogoPage() {
                 className="pl-11 h-12 rounded-full bg-card"
               />
             </div>
-            <Select value={categoryId} onValueChange={setCategoryId}>
+            <Select
+              value={categoryId}
+              onValueChange={(value) => {
+                setCategoryId(value)
+                setPage(1)
+              }}
+            >
               <SelectTrigger className="h-12 rounded-full w-full sm:w-56 bg-card">
                 <SelectValue placeholder="Categoría" />
               </SelectTrigger>
@@ -126,7 +123,6 @@ export default function CatalogoPage() {
                     className="group rounded-3xl border border-border bg-card overflow-hidden hover:shadow-xl transition-shadow"
                   >
                     <div className="aspect-[4/3] bg-muted overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={service.images[0] || "/placeholder-service.svg"}
                         alt={service.name}
@@ -139,7 +135,7 @@ export default function CatalogoPage() {
                     </div>
                     <div className="p-6">
                       <Badge variant="secondary" className="mb-3 rounded-full">
-                        {categoryName(service.category)}
+                        {service.category.name}
                       </Badge>
                       <h3 className="font-serif text-xl mb-2">{service.name}</h3>
                       <p className="text-muted-foreground text-sm line-clamp-2 mb-3">{service.description}</p>
@@ -151,31 +147,7 @@ export default function CatalogoPage() {
                 ))}
               </div>
 
-              {result.totalPages > 1 && (
-                <Pagination className="mt-12">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: result.totalPages }).map((_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink isActive={page === i + 1} onClick={() => setPage(i + 1)} className="cursor-pointer">
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => setPage((p) => Math.min(result.totalPages, p + 1))}
-                        className={page === result.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
+              <SimplePagination page={page} totalPages={result.totalPages} onPageChange={setPage} className="mt-12" />
             </>
           ) : (
             <p className="text-muted-foreground py-20 text-center">No se encontraron publicaciones.</p>

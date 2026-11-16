@@ -22,28 +22,29 @@ export default function ServiciosPage() {
   const [search, setSearch] = useState("")
   const [isLoading, setIsLoading] = useState(true)
 
-  const load = () => {
-    setIsLoading(true)
-    const params = new URLSearchParams({ limit: "100" })
-    if (search.trim()) params.set("search", search.trim())
-    api
-      .get<PaginatedResult<Service>>(`/api/services/admin/all?${params.toString()}`)
-      .then((res) => setServices(res.data))
-      .finally(() => setIsLoading(false))
-  }
+  // incrementarlo vuelve a ejecutar el efecto: sirve para recargar la lista después de editar/borrar
+  const [reloadKey, setReloadKey] = useState(0)
+  const reload = () => setReloadKey((k) => k + 1)
 
   useEffect(() => {
-    const timeout = setTimeout(load, 300)
+    const timeout = setTimeout(() => {
+      setIsLoading(true)
+      const params = new URLSearchParams({ limit: "100" })
+      if (search.trim()) params.set("search", search.trim())
+      api
+        .get<PaginatedResult<Service>>(`/api/services/admin/all?${params.toString()}`)
+        .then((res) => setServices(res.data))
+        .finally(() => setIsLoading(false))
+    }, 300)
     return () => clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search])
+  }, [search, reloadKey])
 
   const toggleStatus = async (service: Service) => {
     const next = service.availabilityStatus === "active" ? "inactive" : "active"
     try {
       await api.patch(`/api/services/${service._id}/status`, { availabilityStatus: next })
       toast.success(next === "inactive" ? "Publicación desactivada" : "Publicación activada")
-      load()
+      reload()
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No pudimos actualizar el estado")
     }
@@ -54,7 +55,7 @@ export default function ServiciosPage() {
     try {
       await api.delete(`/api/services/${service._id}`)
       toast.success("Publicación eliminada")
-      load()
+      reload()
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No pudimos eliminar la publicación")
     }
@@ -101,7 +102,7 @@ export default function ServiciosPage() {
                   <TableCell className="font-medium">{service.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="rounded-full">
-                      {typeof service.category === "string" ? "" : service.category.name}
+                      {service.category.name}
                     </Badge>
                   </TableCell>
                   <TableCell>{service.price !== undefined ? `$${service.price.toLocaleString("es-AR")}` : "—"}</TableCell>

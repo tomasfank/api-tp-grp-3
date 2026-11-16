@@ -1,34 +1,32 @@
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useState, type FormEvent } from "react"
 import { Link } from "react-router"
 import { Header } from "@/components/header"
+import { Field } from "@/components/field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { api, ApiError } from "@/lib/api"
-
-const schema = z.object({
-  email: z.string().min(1, "El correo electrónico es requerido"),
-})
-
-type FormValues = z.infer<typeof schema>
+import { required } from "@/lib/validation"
 
 export default function RecuperarPasswordPage() {
+  const [email, setEmail] = useState("")
+  const [error, setError] = useState<string>()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [resetToken, setResetToken] = useState<string | null>(null)
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: "" },
-  })
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    const emailError = required(email, "El correo electrónico es requerido")
+    setError(emailError)
+    if (emailError) return
 
-  const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true)
     try {
-      const res = await api.post<{ resetToken: string }>("/api/auth/forgot-password", values, { auth: false })
+      const res = await api.post<{ resetToken: string }>("/api/auth/forgot-password", { email }, { auth: false })
       setResetToken(res.resetToken)
     } catch (err) {
-      form.setError("email", { message: err instanceof ApiError ? err.message : "Ocurrió un error" })
+      setError(err instanceof ApiError ? err.message : "Ocurrió un error")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -56,26 +54,23 @@ export default function RecuperarPasswordPage() {
               </Link>
             </div>
           ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Correo electrónico</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} className="rounded-xl h-12" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              <Field label="Correo electrónico" htmlFor="email" error={error}>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setError(undefined)
+                  }}
+                  className="rounded-xl h-12"
                 />
-                <Button type="submit" disabled={form.formState.isSubmitting} className="w-full rounded-full h-12">
-                  {form.formState.isSubmitting ? "Enviando..." : "Generar token"}
-                </Button>
-              </form>
-            </Form>
+              </Field>
+              <Button type="submit" disabled={isSubmitting} className="w-full rounded-full h-12">
+                {isSubmitting ? "Enviando..." : "Generar token"}
+              </Button>
+            </form>
           )}
 
           <div className="mt-6 text-sm text-muted-foreground">

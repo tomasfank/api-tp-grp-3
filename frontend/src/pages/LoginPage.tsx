@@ -1,37 +1,48 @@
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useState, type ChangeEvent, type FormEvent } from "react"
 import { Link, useNavigate } from "react-router"
 import { toast } from "sonner"
 import { Header } from "@/components/header"
+import { Field } from "@/components/field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useAuth, isApiError } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/use-auth"
+import { ApiError } from "@/lib/api"
+import { isValid, required, type FormErrors } from "@/lib/validation"
 
-const loginSchema = z.object({
-  email: z.string().min(1, "El correo electrónico es requerido"),
-  password: z.string().min(1, "La contraseña es requerida"),
-})
-
-type LoginForm = z.infer<typeof loginSchema>
+const initialValues = { email: "", password: "" }
 
 export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const [values, setValues] = useState(initialValues)
+  const [errors, setErrors] = useState<FormErrors<typeof initialValues>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
-  })
+  // un solo handler para todos los inputs: usa el atributo name para saber qué campo actualizar
+  // y borra su mensaje de error, que se vuelve a calcular en el próximo envío
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setValues({ ...values, [e.target.name]: e.target.value })
+    setErrors({ ...errors, [e.target.name]: undefined })
+  }
 
-  const onSubmit = async (values: LoginForm) => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    const newErrors = {
+      email: required(values.email, "El correo electrónico es requerido"),
+      password: required(values.password, "La contraseña es requerida"),
+    }
+    setErrors(newErrors)
+    if (!isValid(newErrors)) return
+
+    setIsSubmitting(true)
     try {
       await login(values)
       toast.success("Bienvenido")
       navigate("/admin")
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : "No pudimos iniciar sesión")
+      toast.error(err instanceof ApiError ? err.message : "No pudimos iniciar sesión")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -43,39 +54,17 @@ export default function LoginPage() {
           <h1 className="font-serif text-3xl tracking-tight mb-2">Ingresar</h1>
           <p className="text-muted-foreground text-sm mb-8">Acceso para administradores del comercio.</p>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Correo electrónico</FormLabel>
-                    <FormControl>
-                      <Input type="email" {...field} className="rounded-xl h-12" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} className="rounded-xl h-12" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={form.formState.isSubmitting} className="w-full rounded-full h-12">
-                {form.formState.isSubmitting ? "Ingresando..." : "Ingresar"}
-              </Button>
-            </form>
-          </Form>
+          <form onSubmit={handleSubmit} noValidate className="space-y-5">
+            <Field label="Correo electrónico" htmlFor="email" error={errors.email}>
+              <Input id="email" name="email" type="email" value={values.email} onChange={handleChange} className="rounded-xl h-12" />
+            </Field>
+            <Field label="Contraseña" htmlFor="password" error={errors.password}>
+              <Input id="password" name="password" type="password" value={values.password} onChange={handleChange} className="rounded-xl h-12" />
+            </Field>
+            <Button type="submit" disabled={isSubmitting} className="w-full rounded-full h-12">
+              {isSubmitting ? "Ingresando..." : "Ingresar"}
+            </Button>
+          </form>
 
           <div className="mt-6 flex flex-col gap-2 text-sm text-muted-foreground">
             <Link to="/recuperar-password" className="hover:text-foreground">

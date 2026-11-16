@@ -70,6 +70,19 @@ export const AuthController = {
   },
 
   /**
+   * GET /api/auth/profile  [auth, admin]
+   * Returns the authenticated admin's profile.
+   */
+  async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const profile = await AuthService.getProfile(req.user!.id);
+      res.status(200).json(profile);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
    * PUT /api/auth/profile  [auth, admin]
    * Updates the authenticated admin's profile with the provided fields.
    */
