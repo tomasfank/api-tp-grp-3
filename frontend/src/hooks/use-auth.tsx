@@ -1,6 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { useNavigate } from "react-router"
-import { api, ApiError } from "@/lib/api"
+import { createContext, useContext, useState, type ReactNode } from "react"
+import { api } from "@/lib/api"
 import type { User } from "@/lib/types"
 
 interface LoginPayload {
@@ -10,8 +9,6 @@ interface LoginPayload {
 
 interface AuthContextValue {
   user: User | null
-  token: string | null
-  isLoading: boolean
   isAuthenticated: boolean
   login: (payload: LoginPayload) => Promise<void>
   logout: () => Promise<void>
@@ -20,24 +17,18 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+function readStoredUser(): User | null {
+  try {
+    return JSON.parse(localStorage.getItem("auth_user") ?? "null")
+  } catch {
+    return null
+  }
+}
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("auth_token")
-    const storedUser = localStorage.getItem("auth_user")
-    if (storedToken) setToken(storedToken)
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem("auth_user")
-      }
-    }
-    setIsLoading(false)
-  }, [])
+export function AuthProvider({ children }: { children: ReactNode }) {
+  // localStorage es síncrono: se lee una sola vez al crear el estado, sin useEffect ni estado de "cargando"
+  const [token, setToken] = useState(() => localStorage.getItem("auth_token"))
+  const [user, setUser] = useState(readStoredUser)
 
   const login = async (payload: LoginPayload) => {
     const res = await api.post<{ token: string }>("/api/auth/login", payload, { auth: false })
@@ -66,8 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        token,
-        isLoading,
         isAuthenticated: !!token,
         login,
         logout,
@@ -83,21 +72,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error("useAuth must be used within AuthProvider")
   return ctx
-}
-
-export function useRequireAdmin() {
-  const { isAuthenticated, isLoading } = useAuth()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate("/login", { replace: true })
-    }
-  }, [isLoading, isAuthenticated, navigate])
-
-  return { isReady: !isLoading && isAuthenticated, isLoading }
-}
-
-export function isApiError(err: unknown): err is ApiError {
-  return err instanceof ApiError
 }

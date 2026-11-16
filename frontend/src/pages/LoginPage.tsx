@@ -7,7 +7,8 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useAuth, isApiError } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/use-auth"
+import { ApiError } from "@/lib/api"
 
 const loginSchema = z.object({
   email: z.string().min(1, "El correo electrónico es requerido"),
@@ -31,7 +32,7 @@ export default function LoginPage() {
       toast.success("Bienvenido")
       navigate("/admin")
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : "No pudimos iniciar sesión")
+      toast.error(err instanceof ApiError ? err.message : "No pudimos iniciar sesión")
     }
   }
 

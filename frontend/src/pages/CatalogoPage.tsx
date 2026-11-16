@@ -30,8 +30,12 @@ export default function CatalogoPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // espera a que el usuario deje de tipear; al cambiar el filtro se vuelve a la página 1
   useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(search), 400)
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 400)
     return () => clearTimeout(timeout)
   }, [search])
 
@@ -41,10 +45,6 @@ export default function CatalogoPage() {
       .then(setCategories)
       .catch(() => setCategories([]))
   }, [])
-
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch, categoryId])
 
   useEffect(() => {
     setIsLoading(true)
@@ -86,7 +86,13 @@ export default function CatalogoPage() {
                 className="pl-11 h-12 rounded-full bg-card"
               />
             </div>
-            <Select value={categoryId} onValueChange={setCategoryId}>
+            <Select
+              value={categoryId}
+              onValueChange={(value) => {
+                setCategoryId(value)
+                setPage(1)
+              }}
+            >
               <SelectTrigger className="h-12 rounded-full w-full sm:w-56 bg-card">
                 <SelectValue placeholder="Categoría" />
               </SelectTrigger>

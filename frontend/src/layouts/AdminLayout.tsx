@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation, useNavigate } from "react-router"
+import { Link, Navigate, Outlet, useLocation } from "react-router"
 import { toast } from "sonner"
 import {
   LayoutDashboard,
@@ -10,8 +10,7 @@ import {
   LogOut,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useAuth, useRequireAdmin } from "@/hooks/use-auth"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/hooks/use-auth"
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -23,23 +22,17 @@ const navItems = [
 ]
 
 export default function AdminLayout() {
-  const { isReady, isLoading } = useRequireAdmin()
-  const { logout } = useAuth()
+  const { isAuthenticated, logout } = useAuth()
   const { pathname } = useLocation()
-  const navigate = useNavigate()
 
+  // al borrar el token, el <Navigate> de abajo redirige a /login
   const handleLogout = async () => {
     await logout()
     toast.success("Sesión cerrada")
-    navigate("/login")
   }
 
-  if (isLoading || !isReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Skeleton className="h-10 w-40" />
-      </div>
-    )
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
   }
 
   return (

@@ -40,11 +40,13 @@ export default function NegocioPage() {
     },
   })
 
+  const { reset } = form
+
   useEffect(() => {
     api
       .get<BusinessInfo>("/api/business-info")
       .then((info) => {
-        form.reset({
+        reset({
           name: info.name ?? "",
           description: info.description ?? "",
           address: info.address ?? "",
@@ -55,8 +57,7 @@ export default function NegocioPage() {
         })
       })
       .catch(() => null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [reset])
 
   const onSubmit = async (values: FormValues) => {
     const socialMedia: Record<string, string> = {}

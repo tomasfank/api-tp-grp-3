@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
+import { useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useNavigate } from "react-router"
@@ -60,19 +60,8 @@ export function ServiceForm({ service }: ServiceFormProps) {
     },
   })
 
-  const images = form.watch("images")
-
-  const addImage = () => {
-    if (images.length >= 10) return
-    form.setValue("images", [...images, { url: "" }])
-  }
-
-  const removeImage = (index: number) => {
-    form.setValue(
-      "images",
-      images.filter((_, i) => i !== index),
-    )
-  }
+  // maneja la lista dinámica de imágenes (agregar/quitar inputs) dentro del formulario
+  const images = useFieldArray({ control: form.control, name: "images" })
 
   const onSubmit = async (values: FormValues) => {
     const payload = {
@@ -194,32 +183,40 @@ export function ServiceForm({ service }: ServiceFormProps) {
         <div>
           <FormLabel>Imágenes (URLs)</FormLabel>
           <div className="space-y-3 mt-2">
-            {images.map((_, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Input
-                  value={images[index]?.url ?? ""}
-                  onChange={(e) => {
-                    const next = [...images]
-                    next[index] = { url: e.target.value }
-                    form.setValue("images", next)
-                  }}
-                  placeholder="https://..."
-                  className="rounded-xl h-12"
-                />
-                {images.length > 1 && (
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeImage(index)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+            {images.fields.map((image, index) => (
+              <FormField
+                key={image.id}
+                control={form.control}
+                name={`images.${index}.url`}
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Input {...field} placeholder="https://..." className="rounded-xl h-12" />
+                      </FormControl>
+                      {images.fields.length > 1 && (
+                        <Button type="button" variant="ghost" size="icon" onClick={() => images.remove(index)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
+              />
             ))}
           </div>
-          {form.formState.errors.images && (
-            <p className="text-sm text-destructive mt-2">
-              {form.formState.errors.images.message ?? "Revisá las URLs ingresadas"}
-            </p>
+          {form.formState.errors.images?.message && (
+            <p className="text-sm text-destructive mt-2">{form.formState.errors.images.message}</p>
           )}
-          <Button type="button" variant="outline" size="sm" onClick={addImage} className="mt-3 rounded-full">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => images.append({ url: "" })}
+            disabled={images.fields.length >= 10}
+            className="mt-3 rounded-full"
+          >
             <Plus className="w-4 h-4 mr-1" />
             Agregar imagen
           </Button>
