@@ -48,7 +48,6 @@ export default function ServiceDetailPage() {
           ) : (
             <div className="grid md:grid-cols-2 gap-10">
               <div className="rounded-3xl overflow-hidden bg-muted aspect-square">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={service.images[0] || "/placeholder-service.svg"}
                   alt={service.name}
@@ -73,7 +72,6 @@ export default function ServiceDetailPage() {
                 {service.images.length > 1 && (
                   <div className="flex gap-3 mb-8 flex-wrap">
                     {service.images.slice(1).map((img, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         key={i}
                         src={img || "/placeholder-service.svg"}

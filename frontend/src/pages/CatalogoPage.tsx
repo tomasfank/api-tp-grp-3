@@ -126,7 +126,6 @@ export default function CatalogoPage() {
                     className="group rounded-3xl border border-border bg-card overflow-hidden hover:shadow-xl transition-shadow"
                   >
                     <div className="aspect-[4/3] bg-muted overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={service.images[0] || "/placeholder-service.svg"}
                         alt={service.name}
