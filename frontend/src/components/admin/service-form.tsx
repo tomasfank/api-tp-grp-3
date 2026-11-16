@@ -29,7 +29,7 @@ export function ServiceForm({ service }: ServiceFormProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [values, setValues] = useState({
     name: service?.name ?? "",
-    category: typeof service?.category === "string" ? service.category : (service?.category?._id ?? ""),
+    category: service?.category._id ?? "",
     description: service?.description ?? "",
     price: service?.price !== undefined ? String(service.price) : "",
     availabilityStatus: service?.availabilityStatus ?? ("active" as AvailabilityStatus),

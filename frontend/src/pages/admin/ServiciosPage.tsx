@@ -102,7 +102,7 @@ export default function ServiciosPage() {
                   <TableCell className="font-medium">{service.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="rounded-full">
-                      {typeof service.category === "string" ? "" : service.category.name}
+                      {service.category.name}
                     </Badge>
                   </TableCell>
                   <TableCell>{service.price !== undefined ? `$${service.price.toLocaleString("es-AR")}` : "—"}</TableCell>

@@ -62,8 +62,6 @@ export default function CatalogoPage() {
       .finally(() => setIsLoading(false))
   }, [page, debouncedSearch, categoryId])
 
-  const categoryName = (cat: Service["category"]) => (typeof cat === "string" ? "" : cat.name)
-
   return (
     <main className="min-h-screen bg-background">
       <Header />
@@ -137,7 +135,7 @@ export default function CatalogoPage() {
                     </div>
                     <div className="p-6">
                       <Badge variant="secondary" className="mb-3 rounded-full">
-                        {categoryName(service.category)}
+                        {service.category.name}
                       </Badge>
                       <h3 className="font-serif text-xl mb-2">{service.name}</h3>
                       <p className="text-muted-foreground text-sm line-clamp-2 mb-3">{service.description}</p>

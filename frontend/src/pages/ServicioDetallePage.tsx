@@ -60,7 +60,7 @@ export default function ServiceDetailPage() {
               </div>
               <div>
                 <Badge variant="secondary" className="mb-4 rounded-full">
-                  {typeof service.category === "string" ? "" : service.category.name}
+                  {service.category.name}
                 </Badge>
                 <h1 className="font-serif text-3xl md:text-4xl tracking-tight mb-4">{service.name}</h1>
                 <p className="text-muted-foreground text-lg leading-relaxed mb-6 whitespace-pre-line">

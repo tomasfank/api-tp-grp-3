@@ -282,6 +282,8 @@ describe('GET /api/services — catálogo público', () => {
     expect(res.body).toMatchObject({ total: 2, page: 1, limit: 10, totalPages: 1 });
     const names = res.body.data.map((s: { name: string }) => s.name);
     expect(names).toEqual(['Alpha', 'Zebra']);
+    // la categoría viene con su nombre para poder mostrarla
+    expect(res.body.data[0].category).toEqual({ _id: String(cat._id), name: 'Cloud' });
   });
 
   it('los servicios inactivos no son visibles en el catálogo', async () => {
@@ -389,6 +391,7 @@ describe('GET /api/services/:id — detalle público', () => {
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Detalle');
     expect(res.body._id).toBe(String(created._id));
+    expect(res.body.category).toEqual({ _id: String(cat._id), name: 'Cloud' });
   });
 
   it('responde 404 para un servicio inactive', async () => {

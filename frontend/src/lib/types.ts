@@ -10,7 +10,8 @@ export interface Category {
 export interface Service {
   _id: string
   name: string
-  category: string | Category
+  // el backend devuelve la categoría con su nombre (populate)
+  category: Pick<Category, "_id" | "name">
   description: string
   images: string[]
   price?: number
