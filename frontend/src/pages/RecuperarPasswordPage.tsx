@@ -60,7 +60,10 @@ export default function RecuperarPasswordPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setError(undefined)
+                  }}
                   className="rounded-xl h-12"
                 />
               </Field>

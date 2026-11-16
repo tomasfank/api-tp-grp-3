@@ -19,8 +19,10 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // un solo handler para todos los inputs: usa el atributo name para saber qué campo actualizar
+  // y borra su mensaje de error, que se vuelve a calcular en el próximo envío
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValues({ ...values, [e.target.name]: e.target.value })
+    setErrors({ ...errors, [e.target.name]: undefined })
   }
 
   const handleSubmit = async (e: FormEvent) => {

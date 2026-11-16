@@ -18,6 +18,7 @@ export default function RegistroPage() {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValues({ ...values, [e.target.name]: e.target.value })
+    setErrors({ ...errors, [e.target.name]: undefined })
   }
 
   const handleSubmit = async (e: FormEvent) => {

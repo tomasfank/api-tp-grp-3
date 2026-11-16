@@ -47,11 +47,13 @@ export function ServiceForm({ service }: ServiceFormProps) {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setValues({ ...values, [e.target.name]: e.target.value })
+    setErrors({ ...errors, [e.target.name]: undefined })
   }
 
   // las imágenes son una lista: se actualizan creando un array nuevo (nunca modificando el actual)
   const updateImage = (index: number, url: string) => {
     setImages(images.map((current, i) => (i === index ? url : current)))
+    setErrors({ ...errors, images: undefined })
   }
   const addImage = () => setImages([...images, ""])
   const removeImage = (index: number) => setImages(images.filter((_, i) => i !== index))
@@ -106,7 +108,10 @@ export function ServiceForm({ service }: ServiceFormProps) {
       </Field>
 
       <Field label="Categoría" htmlFor="category" error={errors.category}>
-        <Select value={values.category} onValueChange={(category) => setValues({ ...values, category })}>
+        <Select value={values.category} onValueChange={(category) => {
+            setValues({ ...values, category })
+            setErrors({ ...errors, category: undefined })
+          }}>
           <SelectTrigger id="category" className="rounded-xl h-12 w-full">
             <SelectValue placeholder="Seleccioná una categoría" />
           </SelectTrigger>
