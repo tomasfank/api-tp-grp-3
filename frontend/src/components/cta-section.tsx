@@ -1,17 +1,5 @@
-import type React from "react"
+import { Link } from "react-router"
 import { ArrowUpRight, ArrowRight } from "lucide-react"
-
-function handleSmoothScroll(e: React.MouseEvent<HTMLAnchorElement>, targetId: string) {
-  e.preventDefault()
-  const element = document.getElementById(targetId)
-  if (!element) return
-
-  const headerOffset = 100
-  const elementPosition = element.getBoundingClientRect().top + window.scrollY
-  const offsetPosition = elementPosition - headerOffset
-
-  window.scrollTo({ top: offsetPosition, behavior: "smooth" })
-}
 
 export function CTASection() {
   return (
@@ -34,7 +22,6 @@ export function CTASection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="#contacto"
-              onClick={(e) => handleSmoothScroll(e, "contacto")}
               className="relative flex items-center justify-center gap-0 bg-foreground text-background rounded-full pl-6 pr-1.5 py-1.5 transition-all duration-300 group overflow-hidden"
             >
               <span className="text-sm pr-4">Hacer una consulta</span>
@@ -43,8 +30,8 @@ export function CTASection() {
               </span>
             </a>
 
-            <a
-              href="/catalogo"
+            <Link
+              to="/catalogo"
               className="relative flex items-center justify-center gap-0 border border-border rounded-full pl-6 pr-1.5 py-1.5 transition-all duration-300 group overflow-hidden"
             >
               <span className="absolute inset-0 bg-foreground rounded-full scale-x-0 origin-right group-hover:scale-x-100 transition-transform duration-300" />
@@ -55,7 +42,7 @@ export function CTASection() {
                 <ArrowRight className="w-4 h-4 text-foreground group-hover:opacity-0 absolute transition-opacity duration-300" />
                 <ArrowUpRight className="w-4 h-4 text-foreground group-hover:text-background opacity-0 group-hover:opacity-100 transition-all duration-300" />
               </span>
-            </a>
+            </Link>
           </div>
         </div>
 

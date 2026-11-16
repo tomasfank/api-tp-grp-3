@@ -13,14 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
+import { SimplePagination } from "@/components/simple-pagination"
 import { api } from "@/lib/api"
 import type { Category, PaginatedResult, Service } from "@/lib/types"
 
@@ -150,31 +143,7 @@ export default function CatalogoPage() {
                 ))}
               </div>
 
-              {result.totalPages > 1 && (
-                <Pagination className="mt-12">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: result.totalPages }).map((_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink isActive={page === i + 1} onClick={() => setPage(i + 1)} className="cursor-pointer">
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => setPage((p) => Math.min(result.totalPages, p + 1))}
-                        className={page === result.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
+              <SimplePagination page={page} totalPages={result.totalPages} onPageChange={setPage} className="mt-12" />
             </>
           ) : (
             <p className="text-muted-foreground py-20 text-center">No se encontraron publicaciones.</p>

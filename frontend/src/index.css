@@ -5,6 +5,11 @@ html {
   scroll-behavior: smooth;
 }
 
+/* deja lugar para el header fijo al saltar a una sección (/#contacto) */
+[id] {
+  scroll-margin-top: 100px;
+}
+
 :root {
   --background: oklch(0.98 0 0);
   --foreground: oklch(0.1 0 0);
@@ -84,4 +89,19 @@ html {
 .animate-draw-icon circle,
 .animate-draw-icon rect {
   animation: drawPath 2s ease-out forwards;
+}
+
+/* carrusel infinito de testimonios: la lista está duplicada, así que mover -50% vuelve al inicio sin salto.
+   Definido en @theme para que funcione como utilidad (animate-marquee) y se combine con hover:paused */
+@theme {
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }

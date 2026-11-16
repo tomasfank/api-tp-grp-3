@@ -1,27 +1,36 @@
 import { Link } from "react-router"
 import { Linkedin, Github, Twitter, ArrowUpRight } from "lucide-react"
 
-const footerLinks = {
-  servicios: [
-    { label: "Desarrollo de software", href: "#services" },
-    { label: "Cloud & infraestructura", href: "#services" },
-    { label: "Transformación digital", href: "#services" },
-  ],
-  empresa: [
-    { label: "Nosotros", href: "#why-us" },
-    { label: "Clientes", href: "#testimonials" },
-    { label: "FAQ", href: "#faq" },
-  ],
-  legal: [
-    { label: "Términos", href: "#" },
-    { label: "Privacidad", href: "#" },
-    { label: "Cookies", href: "#" },
-  ],
-}
+const footerSections = [
+  {
+    title: "Servicios",
+    links: [
+      { label: "Desarrollo de software", to: "/#services" },
+      { label: "Cloud & infraestructura", to: "/#services" },
+      { label: "Transformación digital", to: "/#services" },
+    ],
+  },
+  {
+    title: "Empresa",
+    links: [
+      { label: "Nosotros", to: "/#why-us" },
+      { label: "Clientes", to: "/#testimonials" },
+      { label: "FAQ", to: "/#faq" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Términos", to: "#" },
+      { label: "Privacidad", to: "#" },
+      { label: "Cookies", to: "#" },
+    ],
+  },
+]
 
 export function Footer() {
   return (
-    <footer id="contact" className="relative z-20 border-t border-border pt-16 px-6 bg-background">
+    <footer className="relative z-20 border-t border-border pt-16 px-6 bg-background">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-16 border-b border-border mb-12">
           <div>
@@ -88,53 +97,20 @@ export function Footer() {
             </div>
           </div>
 
-          <div>
-            <h4 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider">Servicios</h4>
-            <ul className="space-y-3">
-              {footerLinks.servicios.map((link, i) => (
-                <li key={i}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider">Empresa</h4>
-            <ul className="space-y-3">
-              {footerLinks.empresa.map((link, i) => (
-                <li key={i}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider">Legal</h4>
-            <ul className="space-y-3">
-              {footerLinks.legal.map((link, i) => (
-                <li key={i}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h4 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider">{section.title}</h4>
+              <ul className="space-y-3">
+                {section.links.map((link) => (
+                  <li key={link.label}>
+                    <Link to={link.to} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 pb-16">
