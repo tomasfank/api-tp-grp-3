@@ -30,6 +30,10 @@ interface ServiceSeed {
  * has a name, description, at least one image URL, a price where applicable and
  * an `active` status (Requirement 12.2).
  */
+/** Builds a 4:3 Unsplash image URL (matches the catalog card aspect ratio). */
+const unsplash = (photoId: string): string =>
+  `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=1200&h=900&q=80`;
+
 const SERVICE_SEEDS: ServiceSeed[] = [
   // Cloud
   {
@@ -37,7 +41,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Cloud',
     description:
       'Planificación y ejecución de la migración de cargas de trabajo on-premise hacia proveedores cloud como AWS, Azure o GCP, minimizando el downtime.',
-    images: ['https://images.vaultra.example/services/cloud-migration.jpg'],
+    images: [unsplash('photo-1690627931320-16ac56eb2588')],
     price: 4500,
     availabilityStatus: 'active',
   },
@@ -46,7 +50,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Cloud',
     description:
       'Diseño de arquitecturas escalables basadas en contenedores, funciones serverless y servicios administrados para maximizar la elasticidad.',
-    images: ['https://images.vaultra.example/services/cloud-native.jpg'],
+    images: [unsplash('photo-1667984390538-3dea7a3fe33d')],
     price: 5200,
     availabilityStatus: 'active',
   },
@@ -55,7 +59,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Cloud',
     description:
       'Auditoría de recursos cloud y recomendaciones de rightsizing, reservas y automatización para reducir la factura mensual sin afectar el rendimiento.',
-    images: ['https://images.vaultra.example/services/cloud-cost.jpg'],
+    images: [unsplash('photo-1757466762489-52fea38071ad')],
     price: 3000,
     availabilityStatus: 'active',
   },
@@ -64,7 +68,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Cloud',
     description:
       'Implementación de estrategias multi-cloud con gobierno centralizado, políticas de seguridad y observabilidad unificada entre proveedores.',
-    images: ['https://images.vaultra.example/services/multi-cloud.jpg'],
+    images: [unsplash('photo-1667372283496-893f0b1e7c16')],
     price: 6000,
     availabilityStatus: 'active',
   },
@@ -73,7 +77,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Cloud',
     description:
       'Diseño de estrategias de respaldo y recuperación ante desastres con RPO/RTO definidos y pruebas periódicas de restauración.',
-    images: ['https://images.vaultra.example/services/backup-dr.jpg'],
+    images: [unsplash('photo-1639066648921-82d4500abf1a')],
     price: 3800,
     availabilityStatus: 'active',
   },
@@ -83,7 +87,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Seguridad',
     description:
       'Evaluación integral de la postura de seguridad de la organización, identificando vulnerabilidades y priorizando remediaciones.',
-    images: ['https://images.vaultra.example/services/security-audit.jpg'],
+    images: [unsplash('photo-1550751827-4bd374c3f58b')],
     price: 4000,
     availabilityStatus: 'active',
   },
@@ -92,7 +96,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Seguridad',
     description:
       'Pruebas de penetración controladas sobre aplicaciones web y APIs para detectar y explotar vulnerabilidades antes que un atacante real.',
-    images: ['https://images.vaultra.example/services/pentesting.jpg'],
+    images: [unsplash('photo-1771986931223-8dc05e52363c')],
     price: 5500,
     availabilityStatus: 'active',
   },
@@ -101,7 +105,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Seguridad',
     description:
       'Implementación de soluciones de gestión de identidades y accesos con MFA, SSO y principios de mínimo privilegio.',
-    images: ['https://images.vaultra.example/services/iam.jpg'],
+    images: [unsplash('photo-1585079374502-415f8516dcc3')],
     price: 4700,
     availabilityStatus: 'active',
   },
@@ -110,7 +114,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Seguridad',
     description:
       'Acompañamiento para alcanzar el cumplimiento de estándares como ISO 27001, PCI-DSS y GDPR, con documentación y controles asociados.',
-    images: ['https://images.vaultra.example/services/compliance.jpg'],
+    images: [unsplash('photo-1754548930574-6a995e5eb5a7')],
     price: 5000,
     availabilityStatus: 'active',
   },
@@ -119,7 +123,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Seguridad',
     description:
       'Servicio de respuesta ante incidentes de seguridad con contención, erradicación, análisis forense y lecciones aprendidas.',
-    images: ['https://images.vaultra.example/services/incident-response.jpg'],
+    images: [unsplash('photo-1751448555253-f39c06e29d82')],
     price: 6500,
     availabilityStatus: 'active',
   },
@@ -129,7 +133,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Desarrollo',
     description:
       'Diseño e implementación de APIs REST seguras, documentadas y escalables siguiendo buenas prácticas y estándares de la industria.',
-    images: ['https://images.vaultra.example/services/rest-api.jpg'],
+    images: [unsplash('photo-1542831371-29b0f74f9713')],
     price: 4200,
     availabilityStatus: 'active',
   },
@@ -138,7 +142,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Desarrollo',
     description:
       'Construcción de aplicaciones web full-stack personalizadas según los requisitos del negocio, con foco en usabilidad y rendimiento.',
-    images: ['https://images.vaultra.example/services/web-apps.jpg'],
+    images: [unsplash('photo-1498050108023-c5249f4df085')],
     price: 7000,
     availabilityStatus: 'active',
   },
@@ -147,7 +151,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Desarrollo',
     description:
       'Refactorización y modernización de aplicaciones legacy hacia arquitecturas mantenibles, reduciendo la deuda técnica.',
-    images: ['https://images.vaultra.example/services/modernization.jpg'],
+    images: [unsplash('photo-1781914476939-91a41b914899')],
     price: 5800,
     availabilityStatus: 'active',
   },
@@ -156,7 +160,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Desarrollo',
     description:
       'Integración de sistemas heterogéneos mediante APIs, colas de mensajes y ETL para lograr un flujo de datos coherente.',
-    images: ['https://images.vaultra.example/services/integration.jpg'],
+    images: [unsplash('photo-1776057441344-38e0587ad1e6')],
     price: 4900,
     availabilityStatus: 'active',
   },
@@ -165,7 +169,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Desarrollo',
     description:
       'Implementación de prácticas de testing automatizado, revisión de código y métricas de calidad para elevar la confiabilidad del software.',
-    images: ['https://images.vaultra.example/services/qa.jpg'],
+    images: [unsplash('photo-1619410283995-43d9134e7656')],
     price: 3500,
     availabilityStatus: 'active',
   },
@@ -175,7 +179,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Infraestructura',
     description:
       'Provisión y gestión de infraestructura como código con Terraform y Ansible para entornos reproducibles y versionados.',
-    images: ['https://images.vaultra.example/services/iac.jpg'],
+    images: [unsplash('photo-1608742213509-815b97c30b36')],
     price: 4600,
     availabilityStatus: 'active',
   },
@@ -184,7 +188,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Infraestructura',
     description:
       'Diseño de pipelines de integración y despliegue continuo que aceleran las entregas manteniendo la estabilidad de producción.',
-    images: ['https://images.vaultra.example/services/cicd.jpg'],
+    images: [unsplash('photo-1716191299980-a6e8827ba10b')],
     price: 4300,
     availabilityStatus: 'active',
   },
@@ -193,7 +197,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Infraestructura',
     description:
       'Despliegue y operación de clústeres Kubernetes con autoescalado, gestión de secretos y observabilidad integrada.',
-    images: ['https://images.vaultra.example/services/kubernetes.jpg'],
+    images: [unsplash('photo-1784914185452-5b73dc4ea306')],
     price: 6200,
     availabilityStatus: 'active',
   },
@@ -202,7 +206,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Infraestructura',
     description:
       'Implementación de stacks de monitoreo con métricas, logs y trazas distribuidas para diagnosticar problemas de forma proactiva.',
-    images: ['https://images.vaultra.example/services/observability.jpg'],
+    images: [unsplash('photo-1551288049-bebda4e38f71')],
     price: 3900,
     availabilityStatus: 'active',
   },
@@ -211,7 +215,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Infraestructura',
     description:
       'Diseño, configuración y hardening de redes empresariales con segmentación, VPN y políticas de firewall.',
-    images: ['https://images.vaultra.example/services/networking.jpg'],
+    images: [unsplash('photo-1683322499436-f4383dd59f5a')],
     price: 4100,
     availabilityStatus: 'active',
   },
@@ -220,7 +224,7 @@ const SERVICE_SEEDS: ServiceSeed[] = [
     category: 'Infraestructura',
     description:
       'Administración, tuning y alta disponibilidad de bases de datos relacionales y NoSQL para garantizar rendimiento y resiliencia.',
-    images: ['https://images.vaultra.example/services/databases.jpg'],
+    images: [unsplash('photo-1695668548342-c0c1ad479aee')],
     price: 4400,
     availabilityStatus: 'active',
   },
@@ -247,6 +251,7 @@ const BUSINESS_INFO_SEED = {
 export interface SeedResult {
   categoriesInserted: number;
   servicesInserted: number;
+  servicesUpdated: number;
   businessInfoInserted: number;
 }
 
@@ -263,6 +268,7 @@ export async function seedDatabase(): Promise<SeedResult> {
   const result: SeedResult = {
     categoriesInserted: 0,
     servicesInserted: 0,
+    servicesUpdated: 0,
     businessInfoInserted: 0,
   };
 
@@ -311,6 +317,18 @@ export async function seedDatabase(): Promise<SeedResult> {
     console.log(`[seed] Inserted ${created.length} services.`);
   } else {
     console.log(`[seed] Services already present (${serviceCount}). Skipping.`);
+
+    // Replace the old placeholder image URLs on already-seeded services (matched
+    // by name) so existing databases pick up real images. Images edited by an
+    // admin are left untouched.
+    for (const seed of SERVICE_SEEDS) {
+      const updated = await Service.updateOne(
+        { name: seed.name, images: { $elemMatch: { $regex: '^https://images\\.vaultra\\.example/' } } },
+        { $set: { images: seed.images } }
+      );
+      result.servicesUpdated += updated.modifiedCount;
+    }
+    console.log(`[seed] Updated images on ${result.servicesUpdated} existing services.`);
   }
 
   // --- BusinessInfo (12.3) ---
