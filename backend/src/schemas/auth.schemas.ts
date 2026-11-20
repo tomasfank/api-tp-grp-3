@@ -29,6 +29,10 @@ export const RegisterSchema = z.object({
   email: z.email('El formato del correo electrónico no es válido'),
   password: passwordSchema,
   phone: phoneSchema,
+  invitationCode: z
+    .string({ error: 'El código de invitación es requerido' })
+    .trim()
+    .min(1, 'El código de invitación es requerido'),
 });
 
 export const LoginSchema = z.object({

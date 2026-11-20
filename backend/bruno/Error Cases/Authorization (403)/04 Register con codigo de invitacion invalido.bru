@@ -1,0 +1,40 @@
+meta {
+  name: 04 Register con codigo de invitacion invalido
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Intruso",
+    "lastName": "Sin Invitacion",
+    "email": "intruso@vaultra.com",
+    "password": "Admin1234!",
+    "invitationCode": "CODIGO-INEXISTENTE"
+  }
+}
+
+assert {
+  res.status: eq 403
+}
+
+tests {
+  test("rechaza con 403", function () {
+    expect(res.getStatus()).to.equal(403);
+  });
+  test("indica que el codigo es invalido", function () {
+    expect(res.getBody().message).to.equal("Código de invitación inválido");
+  });
+}
+
+docs {
+  Autorización (403). Intento de registro con un código de invitación que no
+  existe en la colección `invitationcodes`. El backend responde
+  "Código de invitación inválido" y no crea el usuario.
+}

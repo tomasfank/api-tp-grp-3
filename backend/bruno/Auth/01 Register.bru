@@ -16,12 +16,15 @@ body:json {
     "lastName": "Vaultra",
     "email": "{{adminEmail}}",
     "password": "{{adminPassword}}",
-    "phone": "1122334455"
+    "phone": "1122334455",
+    "invitationCode": "VAULTRA-UADE-2026"
   }
 }
 
 docs {
   Crea una cuenta de administrador. La contraseña debe tener al menos 8
   caracteres, una mayúscula y un dígito o símbolo. `phone` es opcional
-  (7-15 dígitos). Responde 201 con el usuario (sin la contraseña).
+  (7-15 dígitos). `invitationCode` es obligatorio y debe existir en la
+  colección `invitationcodes` (el seed carga `VAULTRA-UADE-2026`). Responde
+  201 con el usuario (sin la contraseña) o 403 si el código no existe.
 }
