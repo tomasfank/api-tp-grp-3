@@ -86,7 +86,7 @@ export default function ServiceDetailPage() {
                   </div>
                 )}
                 <Link
-                  to="/#contacto"
+                  to={`/?asunto=${encodeURIComponent(service.name)}#contacto`}
                   className="inline-flex items-center rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm hover:opacity-90 transition-opacity"
                 >
                   Consultar por este servicio

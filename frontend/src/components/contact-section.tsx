@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
+import { useSearchParams } from "react-router"
 import { toast } from "sonner"
 import { Mail, MapPin, Phone, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,7 +22,14 @@ export function ContactSection() {
       .then((res) => res && setBusinessInfo(res))
   }, [])
 
-  const [values, setValues] = useState(initialValues)
+  const [searchParams] = useSearchParams()
+  const asunto = searchParams.get("asunto")
+  const [values, setValues] = useState({ ...initialValues, subject: asunto?.slice(0, 200) ?? "" })
+
+  useEffect(() => {
+    if (asunto) setValues((v) => ({ ...v, subject: asunto.slice(0, 200) }))
+  }, [asunto])
+
   const [errors, setErrors] = useState<FormErrors<typeof initialValues>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
