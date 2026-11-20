@@ -6,7 +6,8 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../models/user.model';
 import { TokenBlacklist } from '../../../models/token-blacklist.model';
-import { ConflictError, AuthenticationError } from '../../../errors';
+import { InvitationCode } from '../../../models/invitation-code.model';
+import { ConflictError, AuthenticationError, AuthorizationError } from '../../../errors';
 
 // ── MongoDB in-memory setup ────────────────────────────────────────────────────
 
@@ -16,6 +17,13 @@ beforeAll(async () => {
   mongod = await MongoMemoryServer.create();
   await mongoose.connect(mongod.getUri());
   process.env.JWT_SECRET = 'test-secret-for-property-tests';
+});
+
+const TEST_INVITATION_CODE = 'TEST-INVITE-CODE';
+
+// Every registration requires an existing invitation code.
+beforeEach(async () => {
+  await InvitationCode.create({ code: TEST_INVITATION_CODE });
 });
 
 afterEach(async () => {
@@ -45,6 +53,7 @@ const validRegisterArb = fc.record({
     .filter((s) => s.trim().length > 0),
   email: fc.emailAddress(),
   password: fc.constant('ValidPass1!'),
+  invitationCode: fc.constant(TEST_INVITATION_CODE),
 });
 
 // ── Property 1: Las contraseñas nunca se persisten en texto plano ──────────────
@@ -72,6 +81,48 @@ describe('Property 1 — Las contraseñas nunca se persisten en texto plano', ()
     },
     60000
   );
+});
+
+// ── Código de invitación requerido para registrarse ───────────────────────────
+
+describe('Registro — código de invitación', () => {
+  it(
+    'Un código inexistente lanza AuthorizationError y no crea el usuario',
+    async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          validRegisterArb,
+          fc.string({ minLength: 1, maxLength: 30 }).filter((c) => c.trim() !== TEST_INVITATION_CODE),
+          async (dto, badCode) => {
+            await User.deleteMany({});
+
+            await expect(
+              AuthService.register({ ...dto, invitationCode: badCode })
+            ).rejects.toBeInstanceOf(AuthorizationError);
+
+            const count = await User.countDocuments({ email: dto.email.toLowerCase() });
+            expect(count).toBe(0);
+          }
+        ),
+        { numRuns: 50 }
+      );
+    },
+    60000
+  );
+
+  it('El mismo código puede usarse múltiples veces (sin límite de usos)', async () => {
+    for (let i = 0; i < 5; i++) {
+      await AuthService.register({
+        name: 'Admin',
+        lastName: `Numero${i}`,
+        email: `admin${i}@vaultra.dev`,
+        password: 'ValidPass1!',
+        invitationCode: TEST_INVITATION_CODE,
+      });
+    }
+    expect(await User.countDocuments()).toBe(5);
+    expect(await InvitationCode.countDocuments({ code: TEST_INVITATION_CODE })).toBe(1);
+  });
 });
 
 // ── Property 2: El registro rechaza emails duplicados ─────────────────────────

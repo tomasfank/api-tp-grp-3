@@ -3,8 +3,10 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../models/user.model';
 import { TokenBlacklist } from '../models/token-blacklist.model';
+import { InvitationCode } from '../models/invitation-code.model';
 import {
   AuthenticationError,
+  AuthorizationError,
   ConflictError,
   ValidationError,
 } from '../errors';
@@ -38,9 +40,17 @@ function omitPassword(user: InstanceType<typeof User>) {
 export const AuthService = {
   /**
    * Register a new admin user.
+   * Requires a valid invitation code (any code present in the
+   * `invitationcodes` collection — no expiration, no usage limit).
+   * Throws AuthorizationError if the invitation code does not exist.
    * Throws ConflictError if the email is already taken.
    */
   async register(dto: RegisterDto) {
+    const invitation = await InvitationCode.exists({ code: dto.invitationCode.trim() });
+    if (!invitation) {
+      throw new AuthorizationError('Código de invitación inválido');
+    }
+
     const hashedPassword = await bcrypt.hash(dto.password, SALT_ROUNDS);
 
     try {

@@ -292,6 +292,37 @@ describe('Property 11 — RegisterSchema: campos inválidos siempre listados en 
   );
 });
 
+describe('RegisterSchema — invitationCode', () => {
+  const base = {
+    name: 'Nombre',
+    lastName: 'Apellido',
+    email: 'user@example.com',
+    password: 'ValidPass1',
+  };
+
+  it('sin invitationCode produce issue en el campo invitationCode', () => {
+    const result = RegisterSchema.safeParse(base);
+    expect(result.success).toBe(false);
+    expect(failedFields(result)).toContain('invitationCode');
+  });
+
+  it('invitationCode vacío o solo espacios produce issue en el campo invitationCode', () => {
+    fc.assert(
+      fc.property(fc.stringMatching(/^\s*$/), (code) => {
+        const result = RegisterSchema.safeParse({ ...base, invitationCode: code });
+        expect(result.success).toBe(false);
+        expect(failedFields(result)).toContain('invitationCode');
+      }),
+      { numRuns: 50 }
+    );
+  });
+
+  it('con invitationCode presente el payload es válido', () => {
+    const result = RegisterSchema.safeParse({ ...base, invitationCode: 'ALGUN-CODIGO' });
+    expect(result.success).toBe(true);
+  });
+});
+
 // ─── Property 11 — UpdateProfileSchema ───────────────────────────────────────
 
 describe('Property 11 — UpdateProfileSchema: campos inválidos siempre listados en issues', () => {

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { api, ApiError } from "@/lib/api"
 import { isValid, required, validateEmail, validatePassword, validatePhone, type FormErrors } from "@/lib/validation"
 
-const initialValues = { name: "", lastName: "", email: "", password: "", phone: "" }
+const initialValues = { name: "", lastName: "", email: "", password: "", phone: "", invitationCode: "" }
 
 export default function RegistroPage() {
   const navigate = useNavigate()
@@ -29,6 +29,7 @@ export default function RegistroPage() {
       email: validateEmail(values.email),
       password: validatePassword(values.password),
       phone: validatePhone(values.phone),
+      invitationCode: required(values.invitationCode, "El código de invitación es requerido"),
     }
     setErrors(newErrors)
     if (!isValid(newErrors)) return
@@ -43,6 +44,7 @@ export default function RegistroPage() {
           email: values.email,
           password: values.password,
           phone: values.phone || undefined,
+          invitationCode: values.invitationCode.trim(),
         },
         { auth: false },
       )
@@ -80,6 +82,9 @@ export default function RegistroPage() {
             </Field>
             <Field label="Contraseña" htmlFor="password" error={errors.password}>
               <Input id="password" name="password" type="password" value={values.password} onChange={handleChange} className="rounded-xl h-12" />
+            </Field>
+            <Field label="Código de invitación" htmlFor="invitationCode" error={errors.invitationCode}>
+              <Input id="invitationCode" name="invitationCode" autoComplete="off" value={values.invitationCode} onChange={handleChange} className="rounded-xl h-12" />
             </Field>
             <Button type="submit" disabled={isSubmitting} className="w-full rounded-full h-12">
               {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}

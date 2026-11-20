@@ -4,6 +4,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 
 import app from '../../app';
 import { User } from '../../models/user.model';
+import { InvitationCode } from '../../models/invitation-code.model';
 
 // ── MongoDB in-memory setup ────────────────────────────────────────────────────
 //
@@ -14,12 +15,15 @@ import { User } from '../../models/user.model';
 
 let mongod: MongoMemoryServer;
 
+const INVITATION_CODE = 'TEST-INVITE-CODE';
+
 const VALID_ADMIN = {
   name: 'Ada',
   lastName: 'Lovelace',
   email: 'ada@vaultra.dev',
   password: 'Password1',
   phone: '1123456789',
+  invitationCode: INVITATION_CODE,
 };
 
 beforeAll(async () => {
@@ -36,6 +40,7 @@ beforeEach(async () => {
   for (const key in collections) {
     await collections[key].deleteMany({});
   }
+  await InvitationCode.create({ code: INVITATION_CODE });
 });
 
 afterAll(async () => {
@@ -131,6 +136,40 @@ describe('POST /api/auth/register — errores', () => {
     expect(fields).toEqual(
       expect.arrayContaining(['name', 'lastName', 'email', 'password'])
     );
+  });
+});
+
+describe('POST /api/auth/register — código de invitación', () => {
+  it('rechaza el registro sin código de invitación con 400', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { invitationCode: _code, ...withoutCode } = VALID_ADMIN;
+    const res = await request(app).post('/api/auth/register').send(withoutCode);
+
+    expect(res.status).toBe(400);
+    const fields = res.body.errors.map((e: { field: string }) => e.field);
+    expect(fields).toContain('invitationCode');
+    expect(await User.countDocuments()).toBe(0);
+  });
+
+  it('rechaza un código de invitación inexistente con 403', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ ...VALID_ADMIN, invitationCode: 'CODIGO-INEXISTENTE' });
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ status: 403, message: 'Código de invitación inválido' });
+    expect(await User.countDocuments()).toBe(0);
+  });
+
+  it('permite reutilizar el mismo código para varios registros', async () => {
+    const first = await registerDefault();
+    const second = await request(app)
+      .post('/api/auth/register')
+      .send({ ...VALID_ADMIN, email: 'grace@vaultra.dev' });
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
+    expect(first.body.invitationCode).toBeUndefined();
   });
 });
 

@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { Category } from '../models/category.model';
 import { Service } from '../models/service.model';
 import { BusinessInfo } from '../models/business-info.model';
+import { InvitationCode } from '../models/invitation-code.model';
 
 const MONGODB_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/vaultra';
 
@@ -248,11 +249,19 @@ const BUSINESS_INFO_SEED = {
   businessHours: 'Lunes a Viernes de 9:00 a 18:00 (GMT-3)',
 };
 
+/**
+ * Invitation code required by `POST /api/auth/register` to create an admin
+ * account. It has no expiration and no usage limit. Documented in the README so
+ * it can be used to evaluate the project.
+ */
+export const DEFAULT_INVITATION_CODE = 'VAULTRA-UADE-2026';
+
 export interface SeedResult {
   categoriesInserted: number;
   servicesInserted: number;
   servicesUpdated: number;
   businessInfoInserted: number;
+  invitationCodesInserted: number;
 }
 
 /**
@@ -261,6 +270,7 @@ export interface SeedResult {
  * - Categories are inserted only if the categories collection is empty.
  * - Services are inserted only if the services collection is empty.
  * - BusinessInfo is inserted only if no BusinessInfo document exists.
+ * - The default invitation code is upserted (inserted only if missing).
  *
  * Running the seeder repeatedly does not create duplicates (Requirement 12.4).
  */
@@ -270,6 +280,7 @@ export async function seedDatabase(): Promise<SeedResult> {
     servicesInserted: 0,
     servicesUpdated: 0,
     businessInfoInserted: 0,
+    invitationCodesInserted: 0,
   };
 
   // --- Categories (12.1) ---
@@ -340,6 +351,24 @@ export async function seedDatabase(): Promise<SeedResult> {
   } else {
     console.log('[seed] BusinessInfo already present. Skipping.');
   }
+
+  // --- Invitation code (required to register admin users) ---
+  const invitation = await InvitationCode.updateOne(
+    { code: DEFAULT_INVITATION_CODE },
+    {
+      $setOnInsert: {
+        code: DEFAULT_INVITATION_CODE,
+        description: 'Código de invitación por defecto para registrar administradores',
+      },
+    },
+    { upsert: true }
+  );
+  result.invitationCodesInserted = invitation.upsertedCount;
+  console.log(
+    invitation.upsertedCount > 0
+      ? `[seed] Inserted invitation code "${DEFAULT_INVITATION_CODE}".`
+      : `[seed] Invitation code "${DEFAULT_INVITATION_CODE}" already present. Skipping.`
+  );
 
   return result;
 }

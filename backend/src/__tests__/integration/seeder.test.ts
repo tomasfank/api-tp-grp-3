@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-import { seedDatabase } from '../../seed/seeder';
+import { seedDatabase, DEFAULT_INVITATION_CODE } from '../../seed/seeder';
+import { InvitationCode } from '../../models/invitation-code.model';
 import { Category } from '../../models/category.model';
 import { Service } from '../../models/service.model';
 import { BusinessInfo } from '../../models/business-info.model';
@@ -26,6 +27,7 @@ beforeAll(async () => {
   await Category.syncIndexes();
   await Service.init();
   await BusinessInfo.init();
+  await InvitationCode.init();
 });
 
 beforeEach(async () => {
@@ -79,6 +81,15 @@ describe('seedDatabase — conteos mínimos', () => {
   });
 });
 
+describe('seedDatabase — código de invitación', () => {
+  it('inserta el código de invitación por defecto', async () => {
+    const result = await seedDatabase();
+
+    expect(result.invitationCodesInserted).toBe(1);
+    expect(await InvitationCode.exists({ code: DEFAULT_INVITATION_CODE })).not.toBeNull();
+  });
+});
+
 // ── Idempotency (Requirements 12.4, 12.5) ──────────────────────────────────────
 
 describe('seedDatabase — comportamiento idempotente', () => {
@@ -98,11 +109,13 @@ describe('seedDatabase — comportamiento idempotente', () => {
     expect(secondRun.categoriesInserted).toBe(0);
     expect(secondRun.servicesInserted).toBe(0);
     expect(secondRun.businessInfoInserted).toBe(0);
+    expect(secondRun.invitationCodesInserted).toBe(0);
 
     // Counts must remain unchanged after the second run.
     expect(await Category.countDocuments()).toBe(categoriesAfterFirst);
     expect(await Service.countDocuments()).toBe(servicesAfterFirst);
     expect(await BusinessInfo.countDocuments()).toBe(businessInfoAfterFirst);
+    expect(await InvitationCode.countDocuments()).toBe(1);
   });
 
   it('la información del negocio insertada cumple las mismas reglas que valida la API', async () => {
