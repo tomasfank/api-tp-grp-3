@@ -11,11 +11,15 @@ import path from 'path';
 // Requirements: 1.1 (Dockerfile), 1.2 (docker-compose), 1.3 & 1.5 (CI workflow
 // triggered on pull_request), 12.5 (seed script exposed via npm).
 
-// Resolve the repo root from this file's location: src/__tests__/integration → ../../..
+// The backend lives in backend/ inside a monorepo. Dockerfile, docker-compose
+// and package.json sit at the backend root; GitHub Actions only reads workflows
+// from .github/workflows at the repository root, one level above.
+// src/__tests__/integration → ../../.. = backend/
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
+const MONOREPO_ROOT = path.resolve(REPO_ROOT, '..');
 
-const readIfExists = (relPath: string): string | null => {
-  const abs = path.join(REPO_ROOT, relPath);
+const readIfExists = (relPath: string, root: string = REPO_ROOT): string | null => {
+  const abs = path.join(root, relPath);
   return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf-8') : null;
 };
 
@@ -62,7 +66,7 @@ describe('infra — GitHub Actions workflow', () => {
   const WORKFLOWS_DIR = '.github/workflows';
 
   const listWorkflowFiles = (): string[] => {
-    const abs = path.join(REPO_ROOT, WORKFLOWS_DIR);
+    const abs = path.join(MONOREPO_ROOT, WORKFLOWS_DIR);
     if (!fs.existsSync(abs)) return [];
     return fs
       .readdirSync(abs)
@@ -79,7 +83,7 @@ describe('infra — GitHub Actions workflow', () => {
     expect(files.length).toBeGreaterThanOrEqual(1);
 
     const hasPullRequestTrigger = files.some((file) => {
-      const content = readIfExists(path.join(WORKFLOWS_DIR, file));
+      const content = readIfExists(path.join(WORKFLOWS_DIR, file), MONOREPO_ROOT);
       return content !== null && /^\s*pull_request\s*:?/m.test(content);
     });
 
