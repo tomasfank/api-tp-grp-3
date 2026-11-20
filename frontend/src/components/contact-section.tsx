@@ -1,8 +1,9 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
 import { useSearchParams } from "react-router"
 import { toast } from "sonner"
-import { Mail, MapPin, Phone, Clock } from "lucide-react"
+import { MapPin, Phone, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { SocialLinks } from "@/components/social-links"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Field } from "@/components/field"
@@ -156,18 +157,7 @@ export function ContactSection() {
                   <span>{businessInfo.businessHours}</span>
                 </div>
               )}
-              {businessInfo?.socialMedia && Object.keys(businessInfo.socialMedia).length > 0 && (
-                <div className="flex items-start gap-3 text-sm">
-                  <Mail className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                  <div className="flex flex-col gap-1">
-                    {Object.entries(businessInfo.socialMedia).map(([k, v]) => (
-                      <span key={k}>
-                        {k}: {v}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <SocialLinks socialMedia={businessInfo?.socialMedia} />
             </div>
           </div>
         </div>
