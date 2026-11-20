@@ -1,11 +1,18 @@
-import { useEffect, useState } from "react"
-import { Link } from "react-router"
-import { toast } from "sonner"
-import { Pencil, Plus, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
+import { toast } from "sonner";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -13,53 +20,80 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { api, ApiError } from "@/lib/api"
-import type { PaginatedResult, Service } from "@/lib/types"
+} from "@/components/ui/table";
+import { api, ApiError } from "@/lib/api";
+import type { Category, PaginatedResult, Service } from "@/lib/types";
 
 export default function ServiciosPage() {
-  const [services, setServices] = useState<Service[]>([])
-  const [search, setSearch] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
+  const [services, setServices] = useState<Service[]>([]);
+  const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryId, setCategoryId] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<Category[]>("/api/categories", { auth: false })
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
 
   // incrementarlo vuelve a ejecutar el efecto: sirve para recargar la lista después de editar/borrar
-  const [reloadKey, setReloadKey] = useState(0)
-  const reload = () => setReloadKey((k) => k + 1)
+  const [reloadKey, setReloadKey] = useState(0);
+  const reload = () => setReloadKey((k) => k + 1);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setIsLoading(true)
-      const params = new URLSearchParams({ limit: "100" })
-      if (search.trim()) params.set("search", search.trim())
+      setIsLoading(true);
+      const params = new URLSearchParams({ limit: "100" });
+      if (search.trim()) params.set("search", search.trim());
+      if (categoryId !== "all") params.set("category", categoryId);
       api
-        .get<PaginatedResult<Service>>(`/api/services/admin/all?${params.toString()}`)
+        .get<PaginatedResult<Service>>(
+          `/api/services/admin/all?${params.toString()}`,
+        )
         .then((res) => setServices(res.data))
-        .finally(() => setIsLoading(false))
-    }, 300)
-    return () => clearTimeout(timeout)
-  }, [search, reloadKey])
+        .finally(() => setIsLoading(false));
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [search, categoryId, reloadKey]);
 
   const toggleStatus = async (service: Service) => {
-    const next = service.availabilityStatus === "active" ? "inactive" : "active"
+    const next =
+      service.availabilityStatus === "active" ? "inactive" : "active";
     try {
-      await api.patch(`/api/services/${service._id}/status`, { availabilityStatus: next })
-      toast.success(next === "inactive" ? "Publicación desactivada" : "Publicación activada")
-      reload()
+      await api.patch(`/api/services/${service._id}/status`, {
+        availabilityStatus: next,
+      });
+      toast.success(
+        next === "inactive"
+          ? "Publicación desactivada"
+          : "Publicación activada",
+      );
+      reload();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No pudimos actualizar el estado")
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "No pudimos actualizar el estado",
+      );
     }
-  }
+  };
 
   const remove = async (service: Service) => {
-    if (!confirm(`¿Eliminar "${service.name}"?`)) return
+    if (!confirm(`¿Eliminar "${service.name}"?`)) return;
     try {
-      await api.delete(`/api/services/${service._id}`)
-      toast.success("Publicación eliminada")
-      reload()
+      await api.delete(`/api/services/${service._id}`);
+      toast.success("Publicación eliminada");
+      reload();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No pudimos eliminar la publicación")
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "No pudimos eliminar la publicación",
+      );
     }
-  }
+  };
 
   return (
     <div>
@@ -73,17 +107,34 @@ export default function ServiciosPage() {
         </Link>
       </div>
 
-      <Input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Buscar por nombre o descripción..."
-        className="rounded-full h-11 mb-6 max-w-sm"
-      />
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por nombre o descripción..."
+          className="rounded-full h-11 max-w-sm"
+        />
+        <Select value={categoryId} onValueChange={setCategoryId}>
+          <SelectTrigger className="h-11 rounded-full w-full sm:w-56 bg-card">
+            <SelectValue placeholder="Categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las categorías</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c._id} value={c._id}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {isLoading ? (
         <p className="text-muted-foreground">Cargando...</p>
       ) : services.length === 0 ? (
-        <p className="text-muted-foreground">No se encontraron publicaciones.</p>
+        <p className="text-muted-foreground">
+          No se encontraron publicaciones.
+        </p>
       ) : (
         <div className="rounded-3xl border border-border bg-card overflow-hidden">
           <Table>
@@ -105,7 +156,11 @@ export default function ServiciosPage() {
                       {service.category.name}
                     </Badge>
                   </TableCell>
-                  <TableCell>{service.price !== undefined ? `$${service.price.toLocaleString("es-AR")}` : "—"}</TableCell>
+                  <TableCell>
+                    {service.price !== undefined
+                      ? `$${service.price.toLocaleString("es-AR")}`
+                      : "—"}
+                  </TableCell>
                   <TableCell>
                     <Switch
                       checked={service.availabilityStatus === "active"}
@@ -118,7 +173,11 @@ export default function ServiciosPage() {
                         <Pencil className="w-4 h-4" />
                       </Button>
                     </Link>
-                    <Button variant="ghost" size="icon" onClick={() => remove(service)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => remove(service)}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
@@ -129,5 +188,5 @@ export default function ServiciosPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
