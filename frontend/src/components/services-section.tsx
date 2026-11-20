@@ -79,13 +79,6 @@ export function ServicesSection() {
 
   return (
     <section id="services" className="py-32 px-6 pb-24 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none z-0">
-        <span className="font-bold text-center text-[18vw] sm:text-[16vw] md:text-[14vw] lg:text-[12vw] leading-none tracking-tighter text-zinc-100 whitespace-nowrap">
-          SERVICIOS
-        </span>
-      </div>
-
-
       <div className="max-w-7xl mx-auto relative z-10">
         <div
           className="relative px-6 lg:px-8 py-16 lg:py-20 mb-32 overflow-hidden rounded-3xl bg-[oklch(0.1_0_0)]"
