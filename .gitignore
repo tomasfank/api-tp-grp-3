@@ -1,0 +1,13 @@
+# Restos de cuando el backend vivía en la raíz del repo
+node_modules/
+dist/
+coverage/
+
+# Variables de entorno (nunca commitear)
+.env
+.env.*
+!.env.example
+
+# Archivos locales de trabajo
+BASE-REQUIREMENTS.md
+.kiro/
