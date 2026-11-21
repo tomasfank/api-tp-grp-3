@@ -31,13 +31,31 @@ export const ContactController = {
 
   /**
    * PATCH /api/admin/contacts/:id/status  [auth, admin]
-   * Updates only the status of a contact message.
+   * Updates only the status of a contact message ('pending' or 'read').
    */
   async updateStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const contact = await ContactRepository.updateStatus(
         req.params.id as string,
         req.body.status
+      );
+      res.status(200).json(contact);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * POST /api/admin/contacts/:id/reply  [auth, admin]
+   * Saves the admin's reply and marks the contact as 'answered'.
+   * The reply is simulated: it is stored in MongoDB, no email is sent.
+   */
+  async reply(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const contact = await ContactRepository.reply(
+        req.params.id as string,
+        req.body.message,
+        req.user?.id
       );
       res.status(200).json(contact);
     } catch (err) {

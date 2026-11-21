@@ -1,17 +1,18 @@
 import { Contact, IContact, ContactStatus } from '../models/contact.model';
-import { NotFoundError, ValidationError } from '../errors';
+import { Types } from 'mongoose';
+import { ConflictError, NotFoundError, ValidationError } from '../errors';
 import type {
   CreateContactDto,
   UpdateContactStatusDto,
+  ReplyContactDto,
   ContactQueryDto,
 } from '../schemas/contact.schemas';
 
-/** Valid contact statuses, mirroring the enum defined on the Contact model. */
-const VALID_STATUSES: readonly ContactStatus[] = [
-  'pending',
-  'read',
-  'answered',
-];
+/**
+ * Statuses an admin can set manually. 'answered' is excluded on purpose:
+ * a contact only becomes 'answered' through reply().
+ */
+const MANUAL_STATUSES: readonly ContactStatus[] = ['pending', 'read'];
 
 /** Paginated result shape returned by findAll. */
 export interface PaginatedContacts {
@@ -57,15 +58,16 @@ export const ContactRepository = {
   },
 
   /**
-   * Update a contact's status.
-   * Throws ValidationError if the status is not a valid value.
+   * Update a contact's status (only 'pending' or 'read').
+   * Throws ValidationError if the status is not a manually assignable value.
    * Throws NotFoundError if the id does not exist.
+   * Throws ConflictError if the contact was already answered.
    */
   async updateStatus(
     id: string,
     status: UpdateContactStatusDto['status']
   ): Promise<IContact> {
-    if (!VALID_STATUSES.includes(status)) {
+    if (!MANUAL_STATUSES.includes(status)) {
       throw new ValidationError('El estado proporcionado no es válido');
     }
 
@@ -74,7 +76,46 @@ export const ContactRepository = {
       throw new NotFoundError('Contacto no encontrado');
     }
 
+    if (existing.status === 'answered') {
+      throw new ConflictError(
+        'La consulta ya fue respondida y su estado no puede modificarse'
+      );
+    }
+
     existing.status = status;
+    await existing.save();
+    return existing;
+  },
+
+  /**
+   * Reply to a contact (simulated: the reply is persisted, not emailed).
+   * Stores the reply and moves the contact to status 'answered'.
+   * Throws NotFoundError if the id does not exist.
+   * Throws ConflictError if the contact was already answered.
+   */
+  async reply(
+    id: string,
+    message: ReplyContactDto['message'],
+    adminId?: string
+  ): Promise<IContact> {
+    const existing = await Contact.findById(id);
+    if (!existing) {
+      throw new NotFoundError('Contacto no encontrado');
+    }
+
+    if (existing.status === 'answered') {
+      throw new ConflictError('La consulta ya fue respondida');
+    }
+
+    existing.reply = {
+      message,
+      answeredAt: new Date(),
+      answeredBy:
+        adminId && Types.ObjectId.isValid(adminId)
+          ? new Types.ObjectId(adminId)
+          : null,
+    };
+    existing.status = 'answered';
     await existing.save();
     return existing;
   },

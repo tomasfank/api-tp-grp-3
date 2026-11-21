@@ -186,7 +186,7 @@ describe('GET /api/admin/contacts', () => {
 // ── PATCH /api/admin/contacts/:id/status [auth, admin] ─────────────────────────
 
 describe('PATCH /api/admin/contacts/:id/status', () => {
-  it('actualiza el estado de una consulta (pending -> read -> answered)', async () => {
+  it('actualiza el estado de una consulta (pending -> read -> pending)', async () => {
     const contact = await Contact.create({
       name: 'Ada',
       email: 'ada@example.com',
@@ -203,16 +203,56 @@ describe('PATCH /api/admin/contacts/:id/status', () => {
     expect(readRes.status).toBe(200);
     expect(readRes.body.status).toBe('read');
 
-    const answeredRes = await request(app)
+    const pendingRes = await request(app)
+      .patch(`/api/admin/contacts/${contact._id}/status`)
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .send({ status: 'pending' });
+
+    expect(pendingRes.status).toBe(200);
+    expect(pendingRes.body.status).toBe('pending');
+
+    const stored = await Contact.findById(contact._id);
+    expect(stored?.status).toBe('pending');
+  });
+
+  it('no permite marcar como answered manualmente (400)', async () => {
+    const contact = await Contact.create({
+      name: 'Ada',
+      email: 'ada@example.com',
+      subject: 'Consulta',
+      message: 'Mensaje',
+      status: 'read',
+    });
+
+    const res = await request(app)
       .patch(`/api/admin/contacts/${contact._id}/status`)
       .set('Authorization', `Bearer ${adminToken()}`)
       .send({ status: 'answered' });
 
-    expect(answeredRes.status).toBe(200);
-    expect(answeredRes.body.status).toBe('answered');
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ status: 400, message: expect.any(String) });
 
     const stored = await Contact.findById(contact._id);
-    expect(stored?.status).toBe('answered');
+    expect(stored?.status).toBe('read');
+  });
+
+  it('no permite cambiar el estado de una consulta ya respondida (409)', async () => {
+    const contact = await Contact.create({
+      name: 'Ada',
+      email: 'ada@example.com',
+      subject: 'Consulta',
+      message: 'Mensaje',
+      status: 'answered',
+      reply: { message: 'Gracias', answeredAt: new Date() },
+    });
+
+    const res = await request(app)
+      .patch(`/api/admin/contacts/${contact._id}/status`)
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .send({ status: 'pending' });
+
+    expect(res.status).toBe(409);
+    expect(res.body).toMatchObject({ status: 409, message: expect.any(String) });
   });
 
   it('rechaza un estado inválido (400)', async () => {
@@ -260,6 +300,125 @@ describe('PATCH /api/admin/contacts/:id/status', () => {
 
     expect(res.status).toBe(401);
     expect(res.body).toMatchObject({ status: 401, message: expect.any(String) });
+  });
+});
+
+// ── POST /api/admin/contacts/:id/reply [auth, admin] ──────────────────────────
+
+describe('POST /api/admin/contacts/:id/reply', () => {
+  const seedContact = (status: 'pending' | 'read' = 'pending') =>
+    Contact.create({
+      name: 'Ada',
+      email: 'ada@example.com',
+      subject: 'Consulta',
+      message: 'Mensaje',
+      status,
+    });
+
+  it('guarda la respuesta, marca la consulta como answered y devuelve 200', async () => {
+    const contact = await seedContact('read');
+    const adminId = new mongoose.Types.ObjectId().toString();
+    const token = makeToken({ id: adminId, role: 'admin' });
+
+    const res = await request(app)
+      .post(`/api/admin/contacts/${contact._id}/reply`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ message: '  Hola Ada, te contactamos a la brevedad.  ' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('answered');
+    expect(res.body.reply).toMatchObject({
+      message: 'Hola Ada, te contactamos a la brevedad.',
+      answeredBy: adminId,
+    });
+    expect(res.body.reply.answeredAt).toBeDefined();
+
+    const stored = await Contact.findById(contact._id);
+    expect(stored?.status).toBe('answered');
+    expect(stored?.reply?.message).toBe('Hola Ada, te contactamos a la brevedad.');
+    expect(stored?.reply?.answeredAt).toBeInstanceOf(Date);
+    expect(String(stored?.reply?.answeredBy)).toBe(adminId);
+  });
+
+  it('las consultas nuevas no tienen respuesta (reply null)', async () => {
+    const res = await request(app).post('/api/contacts').send(validContact());
+
+    expect(res.status).toBe(201);
+    expect(res.body.reply).toBeNull();
+  });
+
+  it('rechaza una respuesta vacía (400) sin cambiar el estado', async () => {
+    const contact = await seedContact();
+
+    const res = await request(app)
+      .post(`/api/admin/contacts/${contact._id}/reply`)
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .send({ message: '   ' });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ status: 400, message: expect.any(String) });
+
+    const stored = await Contact.findById(contact._id);
+    expect(stored?.status).toBe('pending');
+    expect(stored?.reply).toBeNull();
+  });
+
+  it('rechaza responder una consulta ya respondida (409)', async () => {
+    const contact = await seedContact();
+
+    const first = await request(app)
+      .post(`/api/admin/contacts/${contact._id}/reply`)
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .send({ message: 'Primera respuesta' });
+    expect(first.status).toBe(200);
+
+    const second = await request(app)
+      .post(`/api/admin/contacts/${contact._id}/reply`)
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .send({ message: 'Segunda respuesta' });
+
+    expect(second.status).toBe(409);
+    expect(second.body).toMatchObject({ status: 409, message: expect.any(String) });
+
+    const stored = await Contact.findById(contact._id);
+    expect(stored?.reply?.message).toBe('Primera respuesta');
+  });
+
+  it('devuelve 404 para un id inexistente', async () => {
+    const missingId = new mongoose.Types.ObjectId().toString();
+
+    const res = await request(app)
+      .post(`/api/admin/contacts/${missingId}/reply`)
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .send({ message: 'Hola' });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toMatchObject({ status: 404, message: expect.any(String) });
+  });
+
+  it('rechaza la respuesta sin autenticación (401)', async () => {
+    const contact = await seedContact();
+
+    const res = await request(app)
+      .post(`/api/admin/contacts/${contact._id}/reply`)
+      .send({ message: 'Hola' });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('rechaza la respuesta con rol no admin (403)', async () => {
+    const contact = await seedContact();
+    const token = makeToken({
+      id: new mongoose.Types.ObjectId().toString(),
+      role: 'user',
+    });
+
+    const res = await request(app)
+      .post(`/api/admin/contacts/${contact._id}/reply`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ message: 'Hola' });
+
+    expect(res.status).toBe(403);
   });
 });
 
