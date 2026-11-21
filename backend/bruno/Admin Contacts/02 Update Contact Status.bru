@@ -16,10 +16,12 @@ headers {
 
 body:json {
   {
-    "status": "read"
+     "status": "pending"
+    // "status": "read"
   }
 }
 
 docs {
-  [admin] Cambia el estado del contacto `{{contactId}}` a `pending`, `read` o `answered`.
+  [admin] Cambia el estado del contacto `{{contactId}}` a `pending` o `read`.
+  `answered` solo se alcanza respondiendo la consulta (04 Reply Contact). Devuelve 409 si ya fue respondida.
 }

@@ -32,10 +32,21 @@ const messageSchema = z
   .min(1, 'El mensaje es requerido')
   .max(5000, 'El mensaje no puede superar los 5000 caracteres');
 
-/** Contact status: 'pending', 'read' or 'answered'. */
-const contactStatusSchema = z.enum(['pending', 'read', 'answered'], {
-  error: 'El estado debe ser "pending", "read" o "answered"',
+/**
+ * Status an admin can set manually: 'pending' or 'read'.
+ * 'answered' is only reachable by replying (POST /api/admin/contacts/:id/reply).
+ */
+const contactStatusSchema = z.enum(['pending', 'read'], {
+  error:
+    'El estado debe ser "pending" o "read". Para marcar como respondida, enviá una respuesta',
 });
+
+/** Admin reply: trimmed, between 1 and 5000 characters. */
+const replyMessageSchema = z
+  .string({ error: 'La respuesta es requerida' })
+  .trim()
+  .min(1, 'La respuesta es requerida')
+  .max(5000, 'La respuesta no puede superar los 5000 caracteres');
 
 // ── schemas ───────────────────────────────────────────────────────────────────
 
@@ -49,6 +60,10 @@ export const CreateContactSchema = z.object({
 
 export const UpdateContactStatusSchema = z.object({
   status: contactStatusSchema,
+});
+
+export const ReplyContactSchema = z.object({
+  message: replyMessageSchema,
 });
 
 export const ContactQuerySchema = z.object({
@@ -69,4 +84,5 @@ export const ContactQuerySchema = z.object({
 
 export type CreateContactDto = z.infer<typeof CreateContactSchema>;
 export type UpdateContactStatusDto = z.infer<typeof UpdateContactStatusSchema>;
+export type ReplyContactDto = z.infer<typeof ReplyContactSchema>;
 export type ContactQueryDto = z.infer<typeof ContactQuerySchema>;

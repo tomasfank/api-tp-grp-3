@@ -34,6 +34,12 @@ export interface BusinessInfo {
 
 export type ContactStatus = "pending" | "read" | "answered"
 
+export interface ContactReply {
+  message: string
+  answeredAt: string
+  answeredBy: string | null
+}
+
 export interface Contact {
   _id: string
   name: string
@@ -42,6 +48,7 @@ export interface Contact {
   subject: string
   message: string
   status: ContactStatus
+  reply: ContactReply | null
   createdAt: string
   updatedAt: string
 }

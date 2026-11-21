@@ -1,6 +1,13 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export type ContactStatus = 'pending' | 'read' | 'answered';
+
+/** Admin reply to a contact message. Simulated: stored only, never emailed. */
+export interface IContactReply {
+  message: string;
+  answeredAt: Date;
+  answeredBy: Types.ObjectId | null;
+}
 
 export interface IContact extends Document {
   name: string;
@@ -9,9 +16,31 @@ export interface IContact extends Document {
   subject: string;
   message: string;
   status: ContactStatus;
+  reply: IContactReply | null;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const ContactReplySchema = new Schema<IContactReply>(
+  {
+    message: {
+      type: String,
+      required: true,
+      maxlength: 5000,
+      trim: true,
+    },
+    answeredAt: {
+      type: Date,
+      required: true,
+    },
+    answeredBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+  },
+  { _id: false }
+);
 
 const ContactSchema = new Schema<IContact>(
   {
@@ -48,6 +77,10 @@ const ContactSchema = new Schema<IContact>(
       enum: ['pending', 'read', 'answered'],
       required: true,
       default: 'pending',
+    },
+    reply: {
+      type: ContactReplySchema,
+      default: null,
     },
   },
   {

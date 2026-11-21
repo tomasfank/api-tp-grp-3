@@ -8,6 +8,7 @@ import {
 } from '../middlewares';
 import {
   UpdateContactStatusSchema,
+  ReplyContactSchema,
   ContactQuerySchema,
 } from '../schemas/contact.schemas';
 
@@ -27,6 +28,13 @@ router.patch(
   roleMiddleware('admin'),
   validateBody(UpdateContactStatusSchema),
   ContactController.updateStatus
+);
+router.post(
+  '/:id/reply',
+  authMiddleware,
+  roleMiddleware('admin'),
+  validateBody(ReplyContactSchema),
+  ContactController.reply
 );
 router.delete(
   '/:id',

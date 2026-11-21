@@ -1,0 +1,27 @@
+meta {
+  name: 04 Reply Contact
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/admin/contacts/{{contactId}}/reply
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "message": "Hola, gracias por escribirnos. Te contactamos a la brevedad para coordinar una reunión."
+  }
+}
+
+docs {
+  [admin] Responde la consulta `{{contactId}}` (respuesta simulada: se guarda en MongoDB, no se envía email).
+  Guarda `reply = { message, answeredAt, answeredBy }` y pasa la consulta a `answered`.
+  Devuelve 409 si la consulta ya fue respondida.
+}
